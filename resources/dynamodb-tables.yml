@@ -1,0 +1,31 @@
+Resources:
+  OrganisationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.organisationsTableName}
+      AttributeDefinitions:
+        - AttributeName: organisationId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: organisationId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.usersTableName}
+      AttributeDefinitions:
+        - AttributeName: organisationId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: organisationId
+          KeyType: HASH
+        - AttributeName: userId
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
