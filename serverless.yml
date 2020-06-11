@@ -45,12 +45,30 @@ provider:
         - "Fn::GetAtt": [ UsersTable, Arn]
 
 functions:
-  hello:
-    handler: handler.hello
+  add:
+    handler: add.main
     events:
       - http:
-          path: hello
+          path: users
+          method: post
+          cors: true
+          authorizer: aws_iam
+  list:
+    handler: list.main
+    events:
+      - http:
+          path: users
           method: get
+          cors: true
+          authorizer: aws_iam
+  pair:
+    handler: pair.main
+    events:
+      - http:
+          path: pair
+          method: get
+          cors: true
+          authorizer: aws_iam
 
 resources:
   - ${file(resources/cognito-user-pool.yml)}
