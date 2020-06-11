@@ -28,7 +28,7 @@ export function main(event, context, callback) {
 
     let shuffledArray = data.Items.map(e => ({email: e.email, firstName: e.firstName}));
 
-    for(let i = shuffledArray.length--; i > 0; i--){
+    for(let i = shuffledArray.length-1; i > 0; i--){
       const j = Math.floor(Math.random() * i);
       const temp = shuffledArray[i];
       shuffledArray[i] = shuffledArray[j];
