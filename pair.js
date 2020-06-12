@@ -9,13 +9,11 @@ export function main(event, context, callback) {
   };
 
   dynamoDb.scan(params, (error, data) => {
-    // Set response headers to enable CORS (Cross-Origin Resource Sharing)
     const headers = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Credentials": true
     };
 
-    // Return status code 500 on error
     if (error) {
       const response = {
         statusCode: 500,
@@ -35,11 +33,25 @@ export function main(event, context, callback) {
       shuffledArray[j] = temp;
     }
 
-    // Return status code 200 and the newly created item
+    let pairs = [];
+    let i = shuffledArray.length-1;
+    while(i>0) {
+      if(i>=1){
+        let pair = [shuffledArray[i], shuffledArray[i-1]];
+        pairs.push(pair);
+        i = i -2;
+      }
+      else if(i==0){
+        let pair = [shuffledArray[i], shuffledArray[i+1]];
+        pairs.push(pair);
+        i--;
+      }
+    }
+
     const response = {
       statusCode: 200,
       headers: headers,
-      body: JSON.stringify(shuffledArray)
+      body: JSON.stringify(pairs)
     };
     callback(null, response);
   });
