@@ -1,0 +1,14 @@
+{
+    "request": {
+        "userAttributes": {
+            "email": "userrrrf@example.com",
+            "email_verified": true,
+            "name": "slim shady",
+            "username": "userrrrf@example.com",
+            "custom:organisationName": "ABC Corp",
+            "custom:organisationId": "ccc729d9-5a90-47fd-8cad-9fa4f3e882c3"
+        }
+    },
+    "userName": "usrrfff@example.com",
+    "response": {} 
+}

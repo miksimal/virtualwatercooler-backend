@@ -25,6 +25,7 @@ provider:
   environment:
     ORGANISATIONS_TABLE: ${self:custom.organisationsTableName}
     USERS_TABLE: ${self:custom.usersTableName}
+    POST_CONFIRMATION_LAMBDA: arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:provider.stage}-postConfirmation
   # To load environment variables externally
   # rename env.example to .env and uncomment
   # the following line. Also, make sure to not
@@ -43,7 +44,12 @@ provider:
       Resource:
         - "Fn::GetAtt": [ OrganisationsTable, Arn]
         - "Fn::GetAtt": [ UsersTable, Arn]
-
+    - Effect: "Allow"
+      Action:
+        - ses:SendEmail
+      Resource:
+        - "*"
+   
 functions:
   add:
     handler: add.main
@@ -69,8 +75,27 @@ functions:
           method: get
           cors: true
           authorizer: aws_iam
+  postConfirmation:
+    handler: postConfirmation.main
+  emailPair:
+    handler: emailPair.main
+    events:
+      - http:
+          path: emailPair
+          method: post
+          cors: true
+          authorizer: aws_iam
 
 resources:
   - ${file(resources/cognito-user-pool.yml)}
   - ${file(resources/cognito-identity-pool.yml)}
   - ${file(resources/dynamodb-tables.yml)}
+  - Resources:
+      PostConfirmationTriggerInvokePermission:
+        Type: AWS::Lambda::Permission
+        Properties:
+          Action: lambda:InvokeFunction
+          Principal: cognito-idp.amazonaws.com
+          SourceArn:
+            Fn::GetAtt: [ "CognitoUserPool", "Arn" ]
+          FunctionName: "${self:provider.environment.POST_CONFIRMATION_LAMBDA}"

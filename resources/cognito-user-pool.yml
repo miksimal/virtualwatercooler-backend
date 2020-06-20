@@ -10,12 +10,19 @@ Resources:
       AutoVerifiedAttributes:
         - email
       Schema:
-        - Name: "family_name"
-          Required: true
-          Mutable: true
         - Name: "name"
           Required: true
           Mutable: true
+        - Name: "organisationId"
+          Required: false
+          Mutable: false
+          AttributeDataType: String
+        - Name: "organisationName"
+          Required: false
+          Mutable: true
+          AttributeDataType: String
+      LambdaConfig:
+        PostConfirmation: "${self:provider.environment.POST_CONFIRMATION_LAMBDA}"
 
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
