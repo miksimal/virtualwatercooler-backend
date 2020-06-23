@@ -9,6 +9,13 @@ Resources:
         - email
       AutoVerifiedAttributes:
         - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+          RequireLowercase: false
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: false
       Schema:
         - Name: "name"
           Required: true

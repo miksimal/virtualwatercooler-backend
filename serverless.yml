@@ -26,8 +26,6 @@ provider:
     ORGANISATIONS_TABLE: ${self:custom.organisationsTableName}
     USERS_TABLE: ${self:custom.usersTableName}
     POST_CONFIRMATION_LAMBDA: arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:provider.stage}-postConfirmation
-    USER_POOL_ID:
-      Ref: CognitoUserPool
   # To load environment variables externally
   # rename env.example to .env and uncomment
   # the following line. Also, make sure to not

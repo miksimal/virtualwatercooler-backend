@@ -6,16 +6,18 @@ const cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 
 export function main(event, context, callback) {
   const addUserData = JSON.parse(event.body);
+
   const authProvider = event.requestContext.identity.cognitoAuthenticationProvider;
   const parts = authProvider.split(':');
+  const userPoolIdParts = parts[parts.length - 3].split('/');
   const userPoolUserId = parts[parts.length-1];
-  // note can also get the userpoolid from there, if I want.
+  const userPoolId = userPoolIdParts[userPoolIdParts.length - 1];
 
-  var orgId;
-  var orgName;
+  let orgId;
+  let orgName;
 
   var getUserParams = {
-    UserPoolId: process.env.USER_POOL_ID,
+    UserPoolId: userPoolId,
     Username: userPoolUserId
   };
   cognitoidentityserviceprovider.adminGetUser(getUserParams, function(err, data) {
