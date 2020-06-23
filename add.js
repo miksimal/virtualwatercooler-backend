@@ -23,8 +23,8 @@ export function main(event, context, callback) {
   cognitoidentityserviceprovider.adminGetUser(getUserParams, function(err, data) {
     if (err) console.log(err, err.stack);
     else {
-      orgId = data.UserAttributes.filter(function(attribute) { return attribute.Name === 'custom:organisationId'; })[0].Value;
-      orgName = data.UserAttributes.filter(function(attribute) { return attribute.Name === 'custom:organisationName'; })[0].Value;
+      orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
+      orgName = data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value;
 
       const params = {
         TableName: process.env.USERS_TABLE,

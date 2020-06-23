@@ -21,7 +21,7 @@ export function main(event, context, callback) {
   cognitoidentityserviceprovider.adminGetUser(getUserParams, function(err, data) {
     if (err) console.log(err, err.stack);
     else {
-      orgId = data.UserAttributes.filter(function(attribute) { return attribute.Name === 'custom:organisationId'; })[0].Value;
+      orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
 
       const params = {
         ExpressionAttributeNames: { "#organisationId": "organisationId"},
