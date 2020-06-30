@@ -1,3 +1,8 @@
 {
-    "body": "{\"organisationId\":\"ABC Test Corp\",\"email\":\"muuuuuuuukkel1995@live.dk\",\"firstName\":\"Mikkel\"}"    
+    "body": "[{\"organisationId\":\"ABC Test Corp\",\"email\":\"muuuuuuuukkel1995@live.dk\",\"firstName\":\"Mikkel\"}, {\"organisationId\":\"ABC Test Corp\",\"email\":\"maaakkkkk@live.dk\",\"firstName\":\"Makkk\"}]",
+    "requestContext": {
+        "identity": {
+            "cognitoAuthenticationProvider": "cognito-idp.eu-west-1.amazonaws.com/eu-west-1_KdjbQBqhI,cognito-idp.eu-west-1.amazonaws.com/eu-west-1_KdjbQBqhI:CognitoSignIn:3f55d4da-a44e-43c2-951f-b790209cf5e0"
+        }
+      } 
 }

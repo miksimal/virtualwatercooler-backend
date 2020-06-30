@@ -4,8 +4,13 @@ import AWS from "aws-sdk";
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 
-export function main(event, context, callback) {
-  const addUserData = JSON.parse(event.body);
+export async function main(event, context, callback) {
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Credentials": true
+  };
+
+  const addUserDataArray = JSON.parse(event.body);
 
   const authProvider = event.requestContext.identity.cognitoAuthenticationProvider;
   const parts = authProvider.split(':');
@@ -20,52 +25,55 @@ export function main(event, context, callback) {
     UserPoolId: userPoolId,
     Username: userPoolUserId
   };
-  cognitoidentityserviceprovider.adminGetUser(getUserParams, function(err, data) {
-    if (err) console.log(err, err.stack);
-    else {
-      orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
-      orgName = data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value;
+  try {
+    let data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
+    orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
+    orgName = data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value;
+  } catch(err) {
+    console.log(err, err.stack);
+    const response = {
+      statusCode: 500,
+      headers: headers,
+      body: JSON.stringify({ status: false })
+    };
+    callback(null, response);
+    return;
+  }
 
-      const params = {
-        TableName: process.env.USERS_TABLE,
-        Item: {
-          organisationId: orgId,
-          organisationName: orgName,
-          userId: uuid.v1(),
-          email: addUserData.email,
-          firstName: addUserData.firstName,
-          createdAt: Date.now()
-        }
+  let promisesArray = [];
+  let createdAt = Date.now();
+
+  for (let user of addUserDataArray) {
+    const params = {
+      TableName: process.env.USERS_TABLE,
+      Item: {
+        organisationId: orgId,
+        organisationName: orgName,
+        userId: uuid.v1(),
+        email: user.email,
+        firstName: user.firstName,
+        createdAt: createdAt
+      }
+    };
+    promisesArray.push(dynamoDb.put(params).promise());
+  }
+
+  try {
+    await Promise.all(promisesArray);
+    // Return status code 200 and the newly created item
+    const response = {
+      statusCode: 200,
+      headers: headers,
+      body: JSON.stringify(promisesArray.length + " employees were added")
+    };
+    callback(null, response);
+  } catch(err) {
+      console.log(err);
+      const response = {
+        statusCode: 500,
+        headers: headers,
+        body: JSON.stringify({ status: false })
       };
-
-      console.log(JSON.stringify(params.Item, null, 2));
-
-      dynamoDb.put(params, (error) => {
-        // Set response headers to enable CORS (Cross-Origin Resource Sharing)
-        const headers = {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Credentials": true
-        };
-
-        // Return status code 500 on error
-        if (error) {
-          const response = {
-            statusCode: 500,
-            headers: headers,
-            body: JSON.stringify({ status: false })
-          };
-          callback(null, response);
-          return;
-        }
-
-        // Return status code 200 and the newly created item
-        const response = {
-          statusCode: 200,
-          headers: headers,
-          body: JSON.stringify(params.Item)
-        };
-        callback(null, response);
-      });
-    }
-  });
+      callback(null, response);
+  }
 }
