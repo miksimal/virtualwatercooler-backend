@@ -51,7 +51,7 @@ export async function main(event, context, callback) {
         organisationName: orgName,
         userId: uuid.v1(),
         email: user.email,
-        firstName: user.firstName,
+        firstName: user.name,
         createdAt: createdAt
       }
     };
@@ -60,7 +60,6 @@ export async function main(event, context, callback) {
 
   try {
     await Promise.all(promisesArray);
-    // Return status code 200 and the newly created item
     const response = {
       statusCode: 200,
       headers: headers,
