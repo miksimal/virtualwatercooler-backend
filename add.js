@@ -55,7 +55,8 @@ export async function main(event, context, callback) {
         userId: uuid.v1(),
         email: user.email,
         firstName: user.name,
-        createdAt: createdAt
+        createdAt: createdAt,
+        status: "Pending"
       }
     };
     userDetailsForEmails.push({userId: params.Item.userId, email: params.Item.email, firstName: params.Item.name});
@@ -74,7 +75,7 @@ export async function main(event, context, callback) {
       // TODO service and environment name properly take from env var here
       FunctionName: "coffee-is-work-backend-dev-emailConfirmUsers",
       InvocationType: "Event",
-      Payload: JSON.stringify({userArray: userDetailsForEmails, adminInfo: {orgName: orgName, adminName: adminName}})
+      Payload: JSON.stringify({userArray: userDetailsForEmails, adminInfo: {orgName: orgName, orgId: orgId, adminName: adminName}})
     };
 
     console.log(emailParams.Payload);

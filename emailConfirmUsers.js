@@ -11,9 +11,10 @@ export async function main(event, context, callback) {
   // is still in the sandbox, this address must be verified.
 
   // TODO take baseURL from env var
-  const baseURL = 'http://localhost3000:confirmation/'; // add the userID at the end for their unique endpoint
+  const baseURL = 'http://localhost:3000/confirmation/'; // add the userID at the end for their unique endpoint
   const adminName = adminInfo.adminName;
   const orgName = adminInfo.orgName;
+  const orgId = adminInfo.orgId;
   const sender = "mikkel.hlauritzen@gmail.com";
   const charset = "UTF-8";
   let promisesArray = [];
@@ -23,8 +24,7 @@ export async function main(event, context, callback) {
 
     const recipient = user.email;
     const name = user.firstName;
-    const employeeLink = baseURL + user.userId;
-
+    const employeeLink = baseURL + orgId + '/' + user.userId;
     // The subject line for the email.
     const subject = `Confirmation required: ${adminName} added you to CoffeeIsWork for ${orgName}`;
 
@@ -41,7 +41,7 @@ export async function main(event, context, callback) {
     <body>
       <h1>${adminName} added you to CoffeeIsWork for ${orgName}.</h1>
       <p>Once you've confirmed, you'll occassionally be paired up with coworkers for a brief watercooler chat. ${adminName} will tell you more about it.
-      Please click this link to confirm: ${employeeLink}.";
+      Please click <a href="https://bbc.co.uk">this link</a> to confirm.";
     </body>
     </html>`;
 

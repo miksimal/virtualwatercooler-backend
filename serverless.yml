@@ -94,6 +94,13 @@ functions:
           authorizer: aws_iam
   emailConfirmUsers:
     handler: emailConfirmUsers.main
+  confirm:
+    handler: confirmUser.main
+    events:
+      - http:
+          path: confirm
+          method: post
+          cors: true
 
 resources:
   - ${file(resources/cognito-user-pool.yml)}
