@@ -49,6 +49,11 @@ provider:
         - ses:SendEmail
       Resource:
         - "*"
+    - Effect: "Allow"
+      Action:
+        - lambda:InvokeFunction
+      Resource:
+        - "*"
   iamManagedPolicies:
     - 'arn:aws:iam::aws:policy/AmazonCognitoReadOnly'
 
@@ -87,6 +92,8 @@ functions:
           method: post
           cors: true
           authorizer: aws_iam
+  emailConfirmUsers:
+    handler: emailConfirmUsers.main
 
 resources:
   - ${file(resources/cognito-user-pool.yml)}

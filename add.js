@@ -20,6 +20,7 @@ export async function main(event, context, callback) {
 
   let orgId;
   let orgName;
+  let adminName;
 
   var getUserParams = {
     UserPoolId: userPoolId,
@@ -27,6 +28,7 @@ export async function main(event, context, callback) {
   };
   try {
     let data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
+    adminName = data.UserAttributes.find(attr => attr.Name == 'name').Value;
     orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
     orgName = data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value;
   } catch(err) {
@@ -41,6 +43,7 @@ export async function main(event, context, callback) {
   }
 
   let promisesArray = [];
+  let userDetailsForEmails = [];
   let createdAt = Date.now();
 
   for (let user of addUserDataArray) {
@@ -55,11 +58,30 @@ export async function main(event, context, callback) {
         createdAt: createdAt
       }
     };
+    userDetailsForEmails.push({userId: params.Item.userId, email: params.Item.email, firstName: params.Item.name});
     promisesArray.push(dynamoDb.put(params).promise());
   }
 
   try {
     await Promise.all(promisesArray);
+
+    const emailLambda = new AWS.Lambda({
+      // TODO (a) is region needed? if so, (b) take region from env var
+      region: "eu-west-1"
+    });
+
+    const emailParams = {
+      // TODO service and environment name properly take from env var here
+      FunctionName: "coffee-is-work-backend-dev-emailConfirmUsers",
+      InvocationType: "Event",
+      Payload: JSON.stringify({userArray: userDetailsForEmails, adminInfo: {orgName: orgName, adminName: adminName}})
+    };
+
+    console.log(emailParams.Payload);
+
+    // this did not work: emailLambda.invoke(emailParams);
+    emailLambda.invoke(emailParams).promise();
+
     const response = {
       statusCode: 200,
       headers: headers,
