@@ -1,30 +1,25 @@
 import AWS from "aws-sdk";
 
 export async function main(event, context, callback) {
-  // userArray is an array of objects like this: {userId: Item.userId, email: Item.email, firstName: Item.name}
-  // adminInfo is an object: {orgName: orgName, adminName: adminName}}
-  const adminInfo = event.adminInfo;
-  const userArray = event.userArray;
+  const data = JSON.parse(event.body);
+  const recipient = data.email;
+
+  // query dynamodb for the user with this email in order to get the orgId and userId SCAN
 
   // Get sender as environmental variable or hardcode in here. For now, use personal gmail.
-  // Replace recipient@example.com with a "To" address. If your account
-  // is still in the sandbox, this address must be verified.
 
   // TODO take baseURL from env var
   const baseURL = 'http://localhost:3000/confirmation/'; // add the userID at the end for their unique endpoint
-  const adminName = adminInfo.adminName;
-  const orgName = adminInfo.orgName;
-  const orgId = adminInfo.orgId;
+  const orgId = from dynamod;
+  const userId = from dynamod;
   const sender = "mikkel.hlauritzen@gmail.com";
   const charset = "UTF-8";
   let promisesArray = [];
   const ses = new AWS.SES();
 
-  for (let user of userArray) {
 
-    const recipient = user.email;
-    const name = user.firstName;
-    const employeeLink = baseURL + orgId + '/' + user.userId;
+
+    const employeeLink = baseURL + orgId + '/' + userId;
     // The subject line for the email.
     const subject = `Confirmation required: ${adminName} added you to CoffeeIsWork for ${orgName}`;
 

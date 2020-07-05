@@ -101,6 +101,20 @@ functions:
           path: confirm
           method: post
           cors: true
+  requestUnsubscribe:
+    handler: requestUnsubscribe.main
+    events:
+      - http:
+          path: unsubscribe/request
+          method: post
+          cors: true
+  confirmUnsubscribe:
+    handler: confirmUnsubscribe.main
+    events:
+      - http:
+          path: unsubscribe/confirm
+          method: post
+          cors: true
 
 resources:
   - ${file(resources/cognito-user-pool.yml)}
