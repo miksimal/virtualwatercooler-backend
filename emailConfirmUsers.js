@@ -39,7 +39,7 @@ export async function main(event, context, callback) {
     const body_html = `<html>
     <head></head>
     <body>
-      <h1>${adminName} added you to CoffeeIsWork for ${orgName}.</h1>
+      <h2>${adminName} added you to CoffeeIsWork for ${orgName}.</h2>
       <p>Once you've confirmed, you'll occassionally be paired up with coworkers for a brief watercooler chat. ${adminName} will tell you more about it.
       Please click <a href=${employeeLink}>this link</a> to confirm.
       </p>

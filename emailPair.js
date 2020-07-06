@@ -27,9 +27,10 @@ export function main(event, context, callback) {
   const body_html = `<html>
   <head></head>
   <body>
-    <h1>${name1}, meet ${name2}. ${name2}, meet ${name1}</h1>
+    <h2>${name1}, meet ${name2}. ${name2}, meet ${name1}</h2>
     <p>You two should grab a quick water cooler chat soon!☕️ What day and time would work well? Friday morning tends to work well for most people.
-    This email was sent by <a href="virtualwatercooler.com">Virtual Water Cooler </a> on behalf of ${organisationName}";
+    This email was sent by <a href="https://virtualwatercooler.com">Virtual Water Cooler </a> on behalf of ${organisationName}"
+    If you no longer want to receive these emails, you can <a href="http://localhost:3000/unsubscribe">unsubscribe here</a>.
   </body>
   </html>`;
 
