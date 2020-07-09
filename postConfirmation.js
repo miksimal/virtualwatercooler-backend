@@ -11,7 +11,8 @@ export function main(event, context, callback) {
       userId: event.userName,
       email: event.request.userAttributes.email,
       firstName: event.request.userAttributes.name,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      status: "Confirmed"
     }
   };
 

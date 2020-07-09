@@ -1,5 +1,5 @@
 {
-    "body": "[{\"organisationId\":\"ABC Test Corp\",\"email\":\"muuuuuuuukkel1995@live.dk\",\"name\":\"Mikkel\"}, {\"organisationId\":\"ABC Test Corp\",\"email\":\"maaakkkkk@live.dk\",\"name\":\"Makkk\"}]",
+    "body": "[{\"organisationId\":\"ABC Test Corp\",\"email\":\"mikkel.hlauritzen@gmail.com\",\"name\":\"Mikkel\"}, {\"organisationId\":\"ABC Test Corp\",\"email\":\"maaakkkkk@live.dk\",\"name\":\"Makkk\"}]",
     "requestContext": {
         "identity": {
             "cognitoAuthenticationProvider": "cognito-idp.eu-west-1.amazonaws.com/eu-west-1_KdjbQBqhI,cognito-idp.eu-west-1.amazonaws.com/eu-west-1_KdjbQBqhI:CognitoSignIn:3f55d4da-a44e-43c2-951f-b790209cf5e0"
