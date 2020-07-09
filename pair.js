@@ -6,6 +6,7 @@ export function main(event, context, callback) {
 
   const params = {
     TableName: process.env.USERS_TABLE,
+    // TODO either adjust the scan or make this a query instead. Just send orgId from the client?
   };
 
   dynamoDb.scan(params, (error, data) => {
@@ -24,7 +25,7 @@ export function main(event, context, callback) {
       return;
     }
 
-    let shuffledArray = data.Items.map(e => ({email: e.email, firstName: e.firstName}));
+    let shuffledArray = data.Items.map(e => ({email: e.email, firstName: e.firstName, organisationName: e.organisationName}));
 
     for(let i = shuffledArray.length-1; i > 0; i--){
       const j = Math.floor(Math.random() * i);

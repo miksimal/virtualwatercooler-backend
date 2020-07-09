@@ -84,11 +84,11 @@ functions:
           authorizer: aws_iam
   postConfirmation:
     handler: postConfirmation.main
-  emailPair:
-    handler: emailPair.main
+  emailPairs:
+    handler: emailPairs.main
     events:
       - http:
-          path: emailPair
+          path: emailPairs
           method: post
           cors: true
           authorizer: aws_iam
