@@ -6,7 +6,7 @@ export async function main(event, context, callback) {
   const sender = "mikkel.hlauritzen@gmail.com";
   const charset = "UTF-8";
   const ses = new AWS.SES();
-  const unsubscribeLink = "http://localhost:3000/unsubscribe";
+  const unsubscribeLink = "http://virtualwatercooler.s3-website-eu-west-1.amazonaws.com/unsubscribe";
 
   // Validate that everyone have status == Confirmed
 

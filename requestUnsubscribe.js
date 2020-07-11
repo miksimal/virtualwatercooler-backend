@@ -46,7 +46,7 @@ export async function main(event, context, callback) {
   // Get sender as environmental variable or hardcode in here. For now, use personal gmail.
   const sender = "mikkel.hlauritzen@gmail.com";
   // TODO take baseURL from env var
-  const baseURL = 'http://localhost:3000/unsubscribe/';
+  const baseURL = 'http://virtualwatercooler.s3-website-eu-west-1.amazonaws.com/unsubscribe/';
   const charset = "UTF-8";
   const ses = new AWS.SES();
 

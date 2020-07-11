@@ -11,7 +11,7 @@ export async function main(event, context, callback) {
   // is still in the sandbox, this address must be verified.
 
   // TODO take baseURL from env var
-  const baseURL = 'http://localhost:3000/confirmation/'; // add the userID at the end for their unique endpoint
+  const baseURL = 'http://virtualwatercooler.s3-website-eu-west-1.amazonaws.com/confirmation/'; // add the userID at the end for their unique endpoint
   const adminName = adminInfo.adminName;
   const orgName = adminInfo.orgName;
   const orgId = adminInfo.orgId;
