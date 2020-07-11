@@ -79,7 +79,7 @@ functions:
     events:
       - http:
           path: pair
-          method: get
+          method: post
           cors: true
           authorizer: aws_iam
   postConfirmation:

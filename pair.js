@@ -3,13 +3,19 @@ import AWS from "aws-sdk";
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export function main(event, context, callback) {
+  const data = JSON.parse(event.body);
+  const orgId = data.orgId;
+  const confirmed = "Confirmed";
 
   const params = {
+    ExpressionAttributeNames: { "#organisationId": "organisationId", "#status": "status" },
+    ExpressionAttributeValues: { ':orgId': orgId, ':confirmed': confirmed },
+    KeyConditionExpression: '#organisationId = :orgId',
+    FilterExpression: '#status = :confirmed',
     TableName: process.env.USERS_TABLE,
-    // TODO either adjust the scan or make this a query instead. Just send orgId from the client?
   };
 
-  dynamoDb.scan(params, (error, data) => {
+  dynamoDb.query(params, (error, data) => {
     const headers = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Credentials": true
