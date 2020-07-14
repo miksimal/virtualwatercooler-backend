@@ -3,10 +3,10 @@ import AWS from "aws-sdk";
 export async function main(event, context, callback) {
   const data = JSON.parse(event.body);
   const organisationName = data[0][0].organisationName;
-  const sender = "mikkel.hlauritzen@gmail.com";
+  const sender = "watercooler@virtualwatercooler.xyz";
   const charset = "UTF-8";
   const ses = new AWS.SES();
-  const unsubscribeLink = "http://virtualwatercooler.s3-website-eu-west-1.amazonaws.com/unsubscribe";
+  const unsubscribeLink = "https://virtualwatercooler.xyz/unsubscribe";
 
   // Validate that everyone have status == Confirmed
 
