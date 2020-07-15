@@ -26,11 +26,11 @@ export async function main(event, context, callback) {
     const name = user.firstName;
     const employeeLink = baseURL + orgId + '/' + user.userId;
     // The subject line for the email.
-    const subject = `Confirmation required: ${adminName} added you to CoffeeIsWork for ${orgName}`;
+    const subject = `Confirmation required: ${adminName} added you to Virtual Watercooler for ${orgName}`;
 
     // The email body for recipients with non-HTML email clients.
     const body_text = `Hi ${name},\r\n"
-                    + "${adminName} added you to CoffeeIsWork for ${orgName}."
+                    + "${adminName} added you to Virtual Watercooler for ${orgName}."
                     + "Once you've confirmed, you'll occassionally be paired up with "
                     + "coworkers for a brief watercooler chat. ${adminName} will tell you more about it."
                     + "Please click this link to confirm: ${employeeLink}`;
@@ -39,7 +39,7 @@ export async function main(event, context, callback) {
     const body_html = `<html>
     <head></head>
     <body>
-      <h2>${adminName} added you to CoffeeIsWork for ${orgName}.</h2>
+      <h2>${adminName} added you to Virtual Watercooler for ${orgName}.</h2>
       <p>Once you've confirmed, you'll occassionally be paired up with coworkers for a brief watercooler chat. ${adminName} will tell you more about it.
       Please click <a href=${employeeLink}>this link</a> to confirm.
       </p>
