@@ -44,9 +44,9 @@ export async function main(event, context, callback) {
   const name = userData.firstName;
 
   // Get sender as environmental variable or hardcode in here. For now, use personal gmail.
-  const sender = "mikkel.hlauritzen@gmail.com";
+  const sender = "watercooler@virtualwatercooler.xyz";
   // TODO take baseURL from env var
-  const baseURL = 'http://localhost:3000/unsubscribe/';
+  const baseURL = 'https://virtualwatercooler.xyz/unsubscribe/';
   const charset = "UTF-8";
   const ses = new AWS.SES();
 
@@ -56,7 +56,7 @@ export async function main(event, context, callback) {
 
   // The email body for recipients with non-HTML email clients.
   const body_text = `Hi ${name},\r\n"
-                  + "We received your request to unsubscribe from CoffeeWorks emails."
+                  + "We received your request to unsubscribe from Virtual Watercooler emails."
                   + "To verify that you're you, please confirm by clicking this link: ${employeeLink}"
                   + "Should you want to get back to receiving watercooler chats, contact your organisation admin."`;
 
@@ -65,7 +65,7 @@ export async function main(event, context, callback) {
   <head></head>
   <body>
     <p>Hi ${name},
-    We received your request to unsubscribe from CoffeeWorks emails.
+    We received your request to unsubscribe from Virtual Watercooler emails.
     To verify that you're you, please click <a href=${employeeLink}>this link</a> to confirm.
     Should you want to get back to receiving watercooler chats, contact your organisation admin.
     </p>

@@ -3,12 +3,19 @@ import AWS from "aws-sdk";
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export function main(event, context, callback) {
+  const data = JSON.parse(event.body);
+  const orgId = data.orgId;
+  const confirmed = "Confirmed";
 
   const params = {
+    ExpressionAttributeNames: { "#organisationId": "organisationId", "#status": "status" },
+    ExpressionAttributeValues: { ':orgId': orgId, ':confirmed': confirmed },
+    KeyConditionExpression: '#organisationId = :orgId',
+    FilterExpression: '#status = :confirmed',
     TableName: process.env.USERS_TABLE,
   };
 
-  dynamoDb.scan(params, (error, data) => {
+  dynamoDb.query(params, (error, data) => {
     const headers = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Credentials": true
@@ -24,7 +31,7 @@ export function main(event, context, callback) {
       return;
     }
 
-    let shuffledArray = data.Items.map(e => ({email: e.email, firstName: e.firstName}));
+    let shuffledArray = data.Items.map(e => ({email: e.email, firstName: e.firstName, organisationName: e.organisationName}));
 
     for(let i = shuffledArray.length-1; i > 0; i--){
       const j = Math.floor(Math.random() * i);

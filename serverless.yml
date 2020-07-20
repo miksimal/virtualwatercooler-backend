@@ -14,7 +14,6 @@ custom:
   # commands. Or fallsback to what we have set in the provider section.
   stage: ${opt:stage, self:provider.stage}
   # Set the table name here so we can use it while testing locally
-  organisationsTableName: ${self:custom.stage}-OrganisationsTable
   usersTableName: ${self:custom.stage}-UsersTable
 
 provider:
@@ -23,9 +22,8 @@ provider:
   stage: dev
   region: eu-west-1
   environment:
-    ORGANISATIONS_TABLE: ${self:custom.organisationsTableName}
     USERS_TABLE: ${self:custom.usersTableName}
-    POST_CONFIRMATION_LAMBDA: arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:provider.stage}-postConfirmation
+    POST_CONFIRMATION_LAMBDA: arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:custom.stage}-postConfirmation
   # To load environment variables externally
   # rename env.example to .env and uncomment
   # the following line. Also, make sure to not
@@ -42,7 +40,6 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource:
-        - "Fn::GetAtt": [ OrganisationsTable, Arn]
         - "Fn::GetAtt": [ UsersTable, Arn]
     - Effect: "Allow"
       Action:
@@ -60,6 +57,8 @@ provider:
 functions:
   add:
     handler: add.main
+    environment:
+      EMAIL_CONFIRM_LAMBDA: coffee-is-work-backend-${self:custom.stage}-emailConfirmUsers
     events:
       - http:
           path: users
@@ -79,16 +78,16 @@ functions:
     events:
       - http:
           path: pair
-          method: get
+          method: post
           cors: true
           authorizer: aws_iam
   postConfirmation:
     handler: postConfirmation.main
-  emailPair:
-    handler: emailPair.main
+  emailPairs:
+    handler: emailPairs.main
     events:
       - http:
-          path: emailPair
+          path: emailPairs
           method: post
           cors: true
           authorizer: aws_iam
