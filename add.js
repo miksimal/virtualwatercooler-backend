@@ -73,7 +73,7 @@ export async function main(event, context, callback) {
 
     const emailParams = {
       // TODO service and environment name properly take from env var here
-      FunctionName: "coffee-is-work-backend-dev-emailConfirmUsers",
+      FunctionName: process.env.EMAIL_CONFIRM_LAMBDA,
       InvocationType: "Event",
       Payload: JSON.stringify({userArray: userDetailsForEmails, adminInfo: {orgName: orgName, orgId: orgId, adminName: adminName}})
     };

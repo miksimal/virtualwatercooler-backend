@@ -1,17 +1,4 @@
 Resources:
-  OrganisationsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: ${self:custom.organisationsTableName}
-      AttributeDefinitions:
-        - AttributeName: organisationId
-          AttributeType: S
-      KeySchema:
-        - AttributeName: organisationId
-          KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
