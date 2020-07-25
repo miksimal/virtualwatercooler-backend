@@ -3,31 +3,10 @@ import AWS from "aws-sdk";
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const cloudWatch = new AWS.CloudWatchEvents();
 const cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
+const recurringPairAndEmailFunctionArn = process.env.RECURRING_PAIRANDEMAIL_LAMBDA_ARN;
 const headers = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Credentials": true
-};
-
-const requesterIsAuthorised = async (requestedOrgId, requestContext) => {
-  const authProvider = requestContext.identity.cognitoAuthenticationProvider;
-  const parts = authProvider.split(':');
-  const userPoolIdParts = parts[parts.length - 3].split('/');
-  const userPoolUserId = parts[parts.length-1];
-  const userPoolId = userPoolIdParts[userPoolIdParts.length - 1];
-
-  let orgId;
-  const getUserParams = {
-    UserPoolId: userPoolId,
-    Username: userPoolUserId
-  };
-  try {
-    let data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
-    orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
-  } catch(err) {
-    console.log(err, err.stack);
-    return false;
-  }
-  return orgId == requestedOrgId;
 };
 
 export async function main(event, context, callback) {
@@ -41,15 +20,28 @@ export async function main(event, context, callback) {
     return;
   };
 
-  const recurringPairAndEmailFunctionArn = process.env.RECURRING_PAIRANDEMAIL_LAMBDA_ARN;
-  const data = JSON.parse(event.body);
-  const orgId = data.organisationId;
-  const frequency = data.frequency;
+  let orgId;
 
-  // Confirm that the caller is of that orgId (cognito caller properties)
-  if (!requesterIsAuthorised(orgId, event.requestContext)) {
-    returnFalse('Requester not authorised');
+  const authProvider = event.requestContext.identity.cognitoAuthenticationProvider;
+  const parts = authProvider.split(':');
+  const userPoolIdParts = parts[parts.length - 3].split('/');
+  const userPoolUserId = parts[parts.length-1];
+  const userPoolId = userPoolIdParts[userPoolIdParts.length - 1];
+  const getUserParams = {
+    UserPoolId: userPoolId,
+    Username: userPoolUserId
+  };
+  try {
+    let data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
+    orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
+  } catch(err) {
+    console.log(err, err.stack);
+    returnFalse(err.message);
   }
+
+  const frequency = JSON.parse(event.body);
+
+  // check for frequency == 'Never'
 
   let scheduleExpression;
   switch(frequency) {
@@ -68,10 +60,10 @@ export async function main(event, context, callback) {
     case 'Fridays':
       scheduleExpression = "cron(0 12 ? * FRI *)";
       break;
-    case 'Every5Minutes':
+    case 'Every 5 Minutes':
       scheduleExpression = "cron(0/5 * * * ? *)";
       break;
-    case 'EveryDay':
+    case 'Daily':
       scheduleExpression = "cron(0 12 * * ? *)";
       break;
     default:

@@ -107,6 +107,7 @@ functions:
           path: confirm
           method: post
           cors: true
+          authorizer: aws_iam
   requestUnsubscribe:
     handler: requestUnsubscribe.main
     events:
@@ -114,6 +115,7 @@ functions:
           path: unsubscribe/request
           method: post
           cors: true
+          authorizer: aws_iam
   confirmUnsubscribe:
     handler: confirmUnsubscribe.main
     events:
@@ -121,6 +123,7 @@ functions:
           path: unsubscribe/confirm
           method: post
           cors: true
+          authorizer: aws_iam
   recurringPairAndEmail:
     handler: recurringPairAndEmail.main
   manageRecurrenceRules:
@@ -132,6 +135,7 @@ functions:
           path: rules
           method: post
           cors: true
+          authorizer: aws_iam
 
 resources:
   - ${file(resources/cognito-user-pool.yml)}

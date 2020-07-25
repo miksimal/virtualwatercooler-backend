@@ -1,5 +1,5 @@
 {
-    "body": "{\"organisationId\":\"f0b48741-1fd5-4bb5-89be-ea4f909167a9\",\"frequency\":\"Every5Minutes\"}",
+    "body": "\"Fridays\"",
     "requestContext": {
         "identity": {
             "cognitoAuthenticationProvider": "cognito-idp.eu-west-1.amazonaws.com/eu-west-1_KdjbQBqhI,cognito-idp.eu-west-1.amazonaws.com/eu-west-1_KdjbQBqhI:CognitoSignIn:3d6d53e8-0949-4212-9dd8-d6078b171111"
