@@ -1,17 +1,9 @@
+import handler from "./libs/handler-lib";
 import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-export async function main(event, context, callback) {
-  const returnFalse = (bodyText) => {
-    const response = {
-      statusCode: 500,
-      body: JSON.stringify(bodyText)
-    };
-    callback(null, response);
-    return;
-  };
-
+export const main = handler(async (event, context) => {
   const orgId = event.organisationId;
   const confirmed = "Confirmed";
 
@@ -26,7 +18,7 @@ export async function main(event, context, callback) {
   try {
     data = await dynamoDb.query(queryParams).promise();
   } catch(e) {
-    returnFalse(e);
+    throw new Error(e);
   }
 
   let shuffledArray = data.Items.map(e => ({email: e.email, firstName: e.firstName, organisationName: e.organisationName}));
@@ -118,20 +110,6 @@ export async function main(event, context, callback) {
     promisesArray.push(ses.sendEmail(params).promise());
   }
 
-  try {
-    await Promise.all(promisesArray);
-
-    const response = {
-      statusCode: 'Success',
-      body: JSON.stringify(pairs)
-    };
-    callback(null, response);
-  } catch(err) {
-    const response = {
-      statusCode: 'Error',
-      body: JSON.stringify({ err })
-    };
-    callback(null, response);
-    console.log(err.message);
-  }
-}
+  await Promise.all(promisesArray);
+  return pairs;
+});

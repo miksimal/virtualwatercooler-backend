@@ -1,20 +1,9 @@
+import handler from "./libs/handler-lib";
 import AWS from "aws-sdk";
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
-const headers = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Credentials": true
-};
 
-export async function main(event, context, callback) {
-  const returnFalse = (bodyText) => {
-    const response = {
-      statusCode: 500,
-      headers: headers,
-      body: JSON.stringify(bodyText)
-    };
-    callback(null, response);
-    return;
-  };
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
+
+export const main = handler(async (event, context) => {
   const data = JSON.parse(event.body);
   const recipient = data.email;
 
@@ -31,13 +20,13 @@ export async function main(event, context, callback) {
   try {
     qryResult = await dynamoDb.scan(dbParams).promise();
   } catch(e) {
-    returnFalse("something went wrong when querying dynamoDB");
+    throw new Error(e);
   }
 
   // assume there is at most one user with that email address for now..!
   const userData = qryResult.Items[0];
 
-  if (!userData) returnFalse("The user was not found");
+  if (!userData) throw new Error({ message: "The user was not found" });
 
   const orgId = userData.organisationId;
   const userId = userData.userId;
@@ -97,16 +86,6 @@ export async function main(event, context, callback) {
     }
   };
 
-  try {
-    await ses.sendEmail(params).promise();
-    const response = {
-      statusCode: 200,
-      headers: headers,
-      body: JSON.stringify(`${userId} successfully unsubscribed`)
-    };
-    callback(null, response);
-  } catch(e) {
-    console.log(JSON.stringify(e,null,2));
-    returnFalse("Something went wrong when sending the email. Error message: " + e.message);
-  }
-}
+  await ses.sendEmail(params).promise();
+  return (`${userId} successfully unsubscribed`);
+});
