@@ -40,8 +40,19 @@ export async function main(event, context, callback) {
   }
 
   const frequency = JSON.parse(event.body);
+  const ruleName = orgId + "-" + process.env.STAGE;
 
-  // check for frequency == 'Never'
+  const dynamoPutFrequency = async () => {
+    const params = {
+      TableName: process.env.USERS_TABLE,
+      Item: {
+        organisationId: orgId,
+        userId: "RecurrenceRule",
+        frequency: frequency
+      }
+    };
+    dynamoDb.put(params).promise();
+  };
 
   let scheduleExpression;
   switch(frequency) {
@@ -66,13 +77,44 @@ export async function main(event, context, callback) {
     case 'Daily':
       scheduleExpression = "cron(0 12 * * ? *)";
       break;
+    case 'Never':
+      let ruleExists;
+      try {
+        await cloudWatch.describeRule({Name: ruleName}).promise();
+        ruleExists = true;
+      } catch(e) {
+        JSON.stringify(e, null, 2);
+        if (e.message.includes('does not exist')) {
+          ruleExists = false;
+        } else {
+          returnFalse(e.message);
+        }
+      };
+      const successResponse = {
+        statusCode: 200,
+        headers: headers,
+        body: JSON.stringify(orgId + "'s recurrence rule is now set to 'Never'")
+      };
+
+      if (ruleExists) {
+        try {
+          await cloudWatch.removeTargets({Ids: [orgId], Rule: ruleName}).promise();
+          await cloudWatch.deleteRule({Name: ruleName}).promise();
+          await dynamoPutFrequency();
+
+          callback(null, successResponse);
+          return;
+        } catch(e) {
+          returnFalse(e.message);
+        }
+      } else {
+        callback(null, successResponse);
+        return;
+      }
+      break;
     default:
       returnFalse('Invalid frequency');
   }
-  // docs here: https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html
-
-  // Create: using putRule
-  const ruleName = orgId + "-" + process.env.STAGE;
 
   try {
     await cloudWatch.putRule({
@@ -93,16 +135,7 @@ export async function main(event, context, callback) {
       ]
     }).promise();
 
-    const params = {
-      TableName: process.env.USERS_TABLE,
-      Item: {
-        organisationId: orgId,
-        userId: "RecurrenceRule",
-        frequency: frequency
-      }
-    };
-
-    await dynamoDb.put(params).promise();
+    await dynamoPutFrequency();
 
     const response = {
       statusCode: 200,
@@ -113,8 +146,4 @@ export async function main(event, context, callback) {
   } catch(error) {
       returnFalse(error.message);
   }
-
-  // TODO later: - Delete:
-    // - removeTargets and deleteRule
-    // - remove recurring rule item from dynamodb (can decide whether want no entry for orgs that don’t have rules or we want an empty recurring rule property)
 }
