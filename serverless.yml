@@ -15,6 +15,8 @@ custom:
   stage: ${opt:stage, self:provider.stage}
   # Set the table name here so we can use it while testing locally
   usersTableName: ${self:custom.stage}-UsersTable
+  prodUrl: https://virtualwatercooler.xyz
+  devUrl: http://localhost:3000
 
 provider:
   name: aws
@@ -95,6 +97,9 @@ functions:
     handler: postConfirmation.main
   emailPairs:
     handler: emailPairs.main
+    environment:
+      PROD_URL: ${self:custom.prodUrl}
+      DEV_URL: ${self:custom.devUrl}
     events:
       - http:
           path: emailPairs
@@ -103,6 +108,9 @@ functions:
           authorizer: aws_iam
   emailConfirmUsers:
     handler: emailConfirmUsers.main
+    environment:
+      PROD_URL: ${self:custom.prodUrl}
+      DEV_URL: ${self:custom.devUrl}
   confirm:
     handler: confirmUser.main
     events:
@@ -113,6 +121,9 @@ functions:
           authorizer: aws_iam
   requestUnsubscribe:
     handler: requestUnsubscribe.main
+    environment:
+      PROD_URL: ${self:custom.prodUrl}
+      DEV_URL: ${self:custom.devUrl}
     events:
       - http:
           path: unsubscribe/request
@@ -129,6 +140,9 @@ functions:
           authorizer: aws_iam
   recurringPairAndEmail:
     handler: recurringPairAndEmail.main
+    environment:
+      PROD_URL: ${self:custom.prodUrl}
+      DEV_URL: ${self:custom.devUrl}
   manageRecurrenceRules:
     handler: manageRecurrenceRules.main
     environment:
@@ -141,6 +155,7 @@ functions:
           authorizer: aws_iam
 
 resources:
+  - ${file(resources/api-gateway-errors.yml)}
   - ${file(resources/cognito-user-pool.yml)}
   - ${file(resources/cognito-identity-pool.yml)}
   - ${file(resources/dynamodb-tables.yml)}
