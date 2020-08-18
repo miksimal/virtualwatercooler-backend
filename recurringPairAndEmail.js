@@ -18,7 +18,7 @@ export const main = handler(async (event, context) => {
   try {
     data = await dynamoDb.query(queryParams).promise();
   } catch(e) {
-    throw new Error(e);
+    throw e;
   }
 
   let shuffledArray = data.Items.map(e => ({email: e.email, firstName: e.firstName, organisationName: e.organisationName}));

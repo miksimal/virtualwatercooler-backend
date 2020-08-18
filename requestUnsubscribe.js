@@ -20,7 +20,7 @@ export const main = handler(async (event, context) => {
   try {
     qryResult = await dynamoDb.scan(dbParams).promise();
   } catch(e) {
-    throw new Error(e);
+    throw e;
   }
 
   // assume there is at most one user with that email address for now..!

@@ -53,7 +53,7 @@ provider:
       Action:
         - lambda:InvokeFunction
       Resource:
-        - "*"
+        - arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:custom.stage}-emailConfirmUsers
     - Effect: "Allow"
       Action:
         - events:putRule

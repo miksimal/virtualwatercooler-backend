@@ -22,7 +22,7 @@ export const main = handler(async (event, context) => {
     let data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
     orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
   } catch(err) {
-    throw new Error(err);
+    throw err;
   }
 
   const frequency = JSON.parse(event.body);
@@ -70,7 +70,7 @@ export const main = handler(async (event, context) => {
         if (err.message.includes('does not exist')) {
           return (orgId + "'s recurrence rule is now set to 'Never'");
         } else {
-          throw new Error(err);
+          throw err;
         }
       };
 
@@ -80,10 +80,10 @@ export const main = handler(async (event, context) => {
         await dynamoPutFrequency();
         return (orgId + "'s recurrence rule is now set to 'Never'");
       } catch(err) {
-        throw new Error(err);
+        throw err;
       }
     default:
-      throw new Error({ message: 'Invalid frequency' });
+      throw new Error('Invalid frequency');
   }
 
   try {
@@ -108,6 +108,6 @@ export const main = handler(async (event, context) => {
     await dynamoPutFrequency();
     return (orgId + "'s recurrence rule " + scheduleExpression + " was added");
   } catch(err) {
-      throw new Error(err);
+      throw err;
   }
 });

@@ -28,7 +28,29 @@ export const main = handler(async (event, context) => {
     orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
     orgName = data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value;
   } catch(err) {
-    throw new Error(err);
+    throw err;
+  }
+
+  let existingEmails;
+
+  try {
+    const params = {
+      ExpressionAttributeNames: { "#organisationId": "organisationId" },
+      ExpressionAttributeValues: { ':orgId': orgId },
+      KeyConditionExpression: '#organisationId = :orgId',
+      ProjectionExpression: "email",
+      TableName: process.env.USERS_TABLE,
+    };
+    let data = await dynamoDb.query(params).promise();
+    existingEmails = data.Items.map(e => {
+      if (e) return e.email;
+    });
+  } catch(err) {
+    throw err;
+  }
+
+  for (let user of addUserDataArray) {
+    if (existingEmails.includes(user.email)) throw new Error("Email already exists: " + user.email);
   }
 
   let promisesArray = [];
