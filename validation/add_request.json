@@ -7,7 +7,7 @@
             "properties": {
                 "email": {
                     "type": "string",
-                    "pattern": "^[a-zA-Z0-9]+@[a-zA-Z0-9]+.[a-z]{2,}$"
+                    "pattern": "^[a-zA-Z0-9-.]+@[a-zA-Z0-9-.]+.[a-z]{2,}$"
                 },
                 "name": {
                     "type": "string",
