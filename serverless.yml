@@ -75,6 +75,9 @@ functions:
       - http:
           path: users
           method: post
+          request:
+            schema:
+              application/json: ${file(validation/add_request.json)}
           cors: true
           authorizer: aws_iam
   list:

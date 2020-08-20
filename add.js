@@ -42,9 +42,7 @@ export const main = handler(async (event, context) => {
       TableName: process.env.USERS_TABLE,
     };
     let data = await dynamoDb.query(params).promise();
-    existingEmails = data.Items.map(e => {
-      if (e) return e.email;
-    });
+    existingEmails = data.Items.map(e => e.email);
   } catch(err) {
     throw err;
   }
@@ -77,7 +75,6 @@ export const main = handler(async (event, context) => {
   await Promise.all(promisesArray);
 
   const emailLambda = new AWS.Lambda({
-    // TODO: hardcoded region here..
     region: "eu-west-1"
   });
   const emailParams = {
