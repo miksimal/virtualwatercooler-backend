@@ -20,10 +20,10 @@ Resources:
           KeyType: RANGE
       GlobalSecondaryIndexes:
         - IndexName: GSI1
-        - KeySchema:
-          - AttributeName: GSI1PK
-            KeyType: HASH
-          - AttributeName: GSI1SK
-            KeyType: RANGE
-        - Projection:
-          - ProjectionType: ALL
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
