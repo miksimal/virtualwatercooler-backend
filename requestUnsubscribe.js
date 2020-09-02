@@ -8,6 +8,7 @@ export const main = handler(async (event, context) => {
   const recipient = data.email;
 
   // SCAN :-( dynamodb for the user with this email in order to get the orgId and userId
+  // Just include the orgid as part of the unsubscribe URL. Then, with email in SK, I have all I need.
   const dbParams = {
     ExpressionAttributeNames: { "#email": "email"},
     ExpressionAttributeValues: { ':email': recipient },

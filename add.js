@@ -26,7 +26,7 @@ export const main = handler(async (event, context) => {
     let data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
     adminName = data.UserAttributes.find(attr => attr.Name == 'name').Value;
     orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
-    orgName = data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value;
+    orgName = data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value; // would be better to get orgname from dynamo
   } catch(err) {
     throw err;
   }
@@ -61,15 +61,16 @@ export const main = handler(async (event, context) => {
       Item: {
         organisationId: orgId,
         organisationName: orgName,
-        userId: uuid.v1(),
+        userId: uuid.v1(), // generate outside of the params definition
         email: user.email,
         firstName: user.name,
         createdAt: createdAt,
         status: "Pending"
       }
     };
-    userDetailsForEmails.push({userId: params.Item.userId, email: params.Item.email, firstName: params.Item.name});
-    promisesArray.push(dynamoDb.put(params).promise());
+    userDetailsForEmails.push({userId: params.Item.userId, email: params.Item.email, firstName: params.Item.name}); // add token here
+    promisesArray.push(dynamoDb.put(params).promise()); // change to transactwrites?
+    // create second promisesarray for doing the TOKEN puts corresponding to each user
   }
 
   await Promise.all(promisesArray);
