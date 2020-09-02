@@ -12,7 +12,7 @@ export const main = handler(async (event, context) => {
     ExpressionAttributeValues: { ':orgId': orgId, ':confirmed': confirmed },
     KeyConditionExpression: '#organisationId = :orgId',
     FilterExpression: '#status = :confirmed',
-    TableName: process.env.USERS_TABLE,
+    TableName: process.env.MAIN_TABLE,
   };
   let data;
   try {

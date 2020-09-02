@@ -12,7 +12,7 @@ export function main(event, context, callback) {
     ExpressionAttributeValues: { ':orgId': orgId, ':confirmed': confirmed },
     KeyConditionExpression: '#organisationId = :orgId',
     FilterExpression: '#status = :confirmed',
-    TableName: process.env.USERS_TABLE,
+    TableName: process.env.MAIN_TABLE,
   };
 
   dynamoDb.query(params, (error, data) => {

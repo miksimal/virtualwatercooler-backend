@@ -13,7 +13,7 @@ export const main = handler(async (event, context) => {
     ExpressionAttributeValues: { ':email': recipient },
     FilterExpression: '#email = :email',
     ProjectionExpression: "organisationId, userId, firstName",
-    TableName: process.env.USERS_TABLE,
+    TableName: process.env.MAIN_TABLE,
   };
 
   let qryResult;

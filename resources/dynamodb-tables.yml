@@ -1,18 +1,29 @@
 Resources:
-  UsersTable:
+  MainTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: ${self:custom.usersTableName}
+      TableName: ${self:custom.mainTableName}
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-        - AttributeName: organisationId
+        - AttributeName: PK
           AttributeType: S
-        - AttributeName: userId
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
           AttributeType: S
       KeySchema:
-        - AttributeName: organisationId
+        - AttributeName: PK
           KeyType: HASH
-        - AttributeName: userId
+        - AttributeName: SK
           KeyType: RANGE
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+        - KeySchema:
+          - AttributeName: GSI1PK
+            KeyType: HASH
+          - AttributeName: GSI1SK
+            KeyType: RANGE
+        - Projection:
+          - ProjectionType: ALL

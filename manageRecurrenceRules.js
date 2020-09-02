@@ -30,7 +30,7 @@ export const main = handler(async (event, context) => {
 
   const dynamoPutFrequency = async () => {
     const params = {
-      TableName: process.env.USERS_TABLE,
+      TableName: process.env.MAIN_TABLE,
       Item: {
         organisationId: orgId,
         userId: "RecurrenceRule",

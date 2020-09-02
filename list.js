@@ -27,7 +27,7 @@ export function main(event, context, callback) {
         ExpressionAttributeNames: { "#organisationId": "organisationId"},
         ExpressionAttributeValues: { ':orgId': orgId },
         KeyConditionExpression: '#organisationId = :orgId',
-        TableName: process.env.USERS_TABLE,
+        TableName: process.env.MAIN_TABLE,
       };
 
       dynamoDb.query(params, (error, data) => {

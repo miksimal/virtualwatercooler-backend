@@ -4,7 +4,7 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export function main(event, context, callback) {
   const params = {
-    TableName: process.env.USERS_TABLE,
+    TableName: process.env.MAIN_TABLE,
     Item: {
       organisationId: event.request.userAttributes['custom:organisationId'],
       organisationName: event.request.userAttributes['custom:organisationName'],

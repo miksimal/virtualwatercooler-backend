@@ -13,7 +13,7 @@ export async function main(event, context, callback) {
 
   // DynamoDB UpdateItem status of the user with this userId/orgId to Confirmed (default is Pending)
   const params = {
-    TableName: process.env.USERS_TABLE,
+    TableName: process.env.MAIN_TABLE,
     UpdateExpression: "set #status = :confirmed",
     ExpressionAttributeNames: {
       "#status": "status"

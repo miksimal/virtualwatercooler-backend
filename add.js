@@ -39,7 +39,7 @@ export const main = handler(async (event, context) => {
       ExpressionAttributeValues: { ':orgId': orgId },
       KeyConditionExpression: '#organisationId = :orgId',
       ProjectionExpression: "email",
-      TableName: process.env.USERS_TABLE,
+      TableName: process.env.MAIN_TABLE,
     };
     let data = await dynamoDb.query(params).promise();
     existingEmails = data.Items.map(e => e.email);
@@ -57,7 +57,7 @@ export const main = handler(async (event, context) => {
 
   for (let user of addUserDataArray) {
     const params = {
-      TableName: process.env.USERS_TABLE,
+      TableName: process.env.MAIN_TABLE,
       Item: {
         organisationId: orgId,
         organisationName: orgName,
