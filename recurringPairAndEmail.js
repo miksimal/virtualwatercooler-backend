@@ -1,17 +1,9 @@
+import handler from "./libs/handler-lib";
 import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-export async function main(event, context, callback) {
-  const returnFalse = (bodyText) => {
-    const response = {
-      statusCode: 500,
-      body: JSON.stringify(bodyText)
-    };
-    callback(null, response);
-    return;
-  };
-
+export const main = handler(async (event, context) => {
   const orgId = event.organisationId;
   const confirmed = "Confirmed";
 
@@ -26,7 +18,7 @@ export async function main(event, context, callback) {
   try {
     data = await dynamoDb.query(queryParams).promise();
   } catch(e) {
-    returnFalse(e);
+    throw e;
   }
 
   let shuffledArray = data.Items.map(e => ({email: e.email, firstName: e.firstName, organisationName: e.organisationName}));
@@ -57,7 +49,7 @@ export async function main(event, context, callback) {
   const sender = "watercooler@virtualwatercooler.xyz";
   const charset = "UTF-8";
   const ses = new AWS.SES();
-  const unsubscribeLink = "https://virtualwatercooler.xyz/unsubscribe";
+  const unsubscribeLink = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + "/unsubscribe";
 
   // this approach is a bit shaky.. It will fail if one email fails to send, so risk that user emails everyone twice. Having a lambda get triggered with a single email at a time from an SQS queue probably better (LATER).
   // And/or adjust so it fits with my 20 emails per second SES limit (i.e. fire off 20, wait 1 sec, repeat. And/or get SES limit increased to, say, 60 per sec. Then restrict organisation sizes to max 100 people?)
@@ -118,20 +110,6 @@ export async function main(event, context, callback) {
     promisesArray.push(ses.sendEmail(params).promise());
   }
 
-  try {
-    await Promise.all(promisesArray);
-
-    const response = {
-      statusCode: 'Success',
-      body: JSON.stringify(pairs)
-    };
-    callback(null, response);
-  } catch(err) {
-    const response = {
-      statusCode: 'Error',
-      body: JSON.stringify({ err })
-    };
-    callback(null, response);
-    console.log(err.message);
-  }
-}
+  await Promise.all(promisesArray);
+  return pairs;
+});

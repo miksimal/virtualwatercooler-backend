@@ -1,25 +1,12 @@
+import handler from "./libs/handler-lib";
 import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const cloudWatch = new AWS.CloudWatchEvents();
 const cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 const recurringPairAndEmailFunctionArn = process.env.RECURRING_PAIRANDEMAIL_LAMBDA_ARN;
-const headers = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Credentials": true
-};
 
-export async function main(event, context, callback) {
-  const returnFalse = (bodyText) => {
-    const response = {
-      statusCode: 500,
-      headers: headers,
-      body: JSON.stringify(bodyText)
-    };
-    callback(null, response);
-    return;
-  };
-
+export const main = handler(async (event, context) => {
   let orgId;
 
   const authProvider = event.requestContext.identity.cognitoAuthenticationProvider;
@@ -35,8 +22,7 @@ export async function main(event, context, callback) {
     let data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
     orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
   } catch(err) {
-    console.log(err, err.stack);
-    returnFalse(err.message);
+    throw err;
   }
 
   const frequency = JSON.parse(event.body);
@@ -78,42 +64,26 @@ export async function main(event, context, callback) {
       scheduleExpression = "cron(0 12 * * ? *)";
       break;
     case 'Never':
-      let ruleExists;
       try {
         await cloudWatch.describeRule({Name: ruleName}).promise();
-        ruleExists = true;
-      } catch(e) {
-        JSON.stringify(e, null, 2);
-        if (e.message.includes('does not exist')) {
-          ruleExists = false;
+      } catch(err) {
+        if (err.message.includes('does not exist')) {
+          return (orgId + "'s recurrence rule is now set to 'Never'");
         } else {
-          returnFalse(e.message);
+          throw err;
         }
       };
-      const successResponse = {
-        statusCode: 200,
-        headers: headers,
-        body: JSON.stringify(orgId + "'s recurrence rule is now set to 'Never'")
-      };
 
-      if (ruleExists) {
-        try {
-          await cloudWatch.removeTargets({Ids: [orgId], Rule: ruleName}).promise();
-          await cloudWatch.deleteRule({Name: ruleName}).promise();
-          await dynamoPutFrequency();
-
-          callback(null, successResponse);
-          return;
-        } catch(e) {
-          returnFalse(e.message);
-        }
-      } else {
-        callback(null, successResponse);
-        return;
+      try {
+        await cloudWatch.removeTargets({Ids: [orgId], Rule: ruleName}).promise();
+        await cloudWatch.deleteRule({Name: ruleName}).promise();
+        await dynamoPutFrequency();
+        return (orgId + "'s recurrence rule is now set to 'Never'");
+      } catch(err) {
+        throw err;
       }
-      break;
     default:
-      returnFalse('Invalid frequency');
+      throw new Error('Invalid frequency');
   }
 
   try {
@@ -136,14 +106,8 @@ export async function main(event, context, callback) {
     }).promise();
 
     await dynamoPutFrequency();
-
-    const response = {
-      statusCode: 200,
-      headers: headers,
-      body: JSON.stringify(orgId + "'s recurrence rule " + scheduleExpression + " was added")
-    };
-    callback(null, response);
-  } catch(error) {
-      returnFalse(error.message);
+    return (orgId + "'s recurrence rule " + scheduleExpression + " was added");
+  } catch(err) {
+      throw err;
   }
-}
+});

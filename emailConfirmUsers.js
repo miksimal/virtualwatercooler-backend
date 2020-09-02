@@ -11,7 +11,7 @@ export async function main(event, context, callback) {
   // is still in the sandbox, this address must be verified.
 
   // TODO take baseURL from env var
-  const baseURL = 'https://virtualwatercooler.xyz/confirmation/'; // add the userID at the end for their unique endpoint
+  const baseURL = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + '/confirmation/'; // add the userID at the end for their unique endpoint
   const adminName = adminInfo.adminName;
   const orgName = adminInfo.orgName;
   const orgId = adminInfo.orgId;

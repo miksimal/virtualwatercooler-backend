@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+    "definitions": {
+        "user": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9-.]+@[a-zA-Z0-9-.]+.[a-z]{2,}$"
+                },
+                "name": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z]+$"
+                }
+            },
+            "required": ["email", "name"]
+        }
+    },
+
+    "type": "array",
+    "title": "The Root Schema",
+    "items": { "$ref": "#/definitions/user" },
+    "minItems": 1,
+    "maxItems": 100,
+    "uniqueItems": true
+  }

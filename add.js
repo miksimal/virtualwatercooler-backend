@@ -1,15 +1,11 @@
+import handler from "./libs/handler-lib";
 import * as uuid from "uuid";
 import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 
-export async function main(event, context, callback) {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Credentials": true
-  };
-
+export const main = handler(async (event, context) => {
   const addUserDataArray = JSON.parse(event.body);
 
   const authProvider = event.requestContext.identity.cognitoAuthenticationProvider;
@@ -32,14 +28,27 @@ export async function main(event, context, callback) {
     orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
     orgName = data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value;
   } catch(err) {
-    console.log(err, err.stack);
-    const response = {
-      statusCode: 500,
-      headers: headers,
-      body: JSON.stringify({ status: false })
+    throw err;
+  }
+
+  let existingEmails;
+
+  try {
+    const params = {
+      ExpressionAttributeNames: { "#organisationId": "organisationId" },
+      ExpressionAttributeValues: { ':orgId': orgId },
+      KeyConditionExpression: '#organisationId = :orgId',
+      ProjectionExpression: "email",
+      TableName: process.env.USERS_TABLE,
     };
-    callback(null, response);
-    return;
+    let data = await dynamoDb.query(params).promise();
+    existingEmails = data.Items.map(e => e.email);
+  } catch(err) {
+    throw err;
+  }
+
+  for (let user of addUserDataArray) {
+    if (existingEmails.includes(user.email)) throw new Error("Email already exists: " + user.email);
   }
 
   let promisesArray = [];
@@ -63,39 +72,18 @@ export async function main(event, context, callback) {
     promisesArray.push(dynamoDb.put(params).promise());
   }
 
-  try {
-    await Promise.all(promisesArray);
+  await Promise.all(promisesArray);
 
-    const emailLambda = new AWS.Lambda({
-      // TODO (a) is region needed? if so, (b) take region from env var
-      region: "eu-west-1"
-    });
+  const emailLambda = new AWS.Lambda({
+    region: "eu-west-1"
+  });
+  const emailParams = {
+    FunctionName: process.env.EMAIL_CONFIRM_LAMBDA,
+    InvocationType: "Event",
+    Payload: JSON.stringify({userArray: userDetailsForEmails, adminInfo: {orgName: orgName, orgId: orgId, adminName: adminName}})
+  };
 
-    const emailParams = {
-      // TODO service and environment name properly take from env var here
-      FunctionName: process.env.EMAIL_CONFIRM_LAMBDA,
-      InvocationType: "Event",
-      Payload: JSON.stringify({userArray: userDetailsForEmails, adminInfo: {orgName: orgName, orgId: orgId, adminName: adminName}})
-    };
+  emailLambda.invoke(emailParams).promise();
 
-    console.log(emailParams.Payload);
-
-    // this did not work: emailLambda.invoke(emailParams);
-    emailLambda.invoke(emailParams).promise();
-
-    const response = {
-      statusCode: 200,
-      headers: headers,
-      body: JSON.stringify(promisesArray.length + " employees were added")
-    };
-    callback(null, response);
-  } catch(err) {
-      console.log(err);
-      const response = {
-        statusCode: 500,
-        headers: headers,
-        body: JSON.stringify({ status: false })
-      };
-      callback(null, response);
-  }
-}
+  return (promisesArray.length + " employees were added");
+});
