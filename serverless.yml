@@ -53,7 +53,7 @@ provider:
       Action:
         - lambda:InvokeFunction
       Resource:
-        - arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:custom.stage}-emailConfirmUsers
+        - arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:custom.stage}-emailConfirmMembers
     - Effect: "Allow"
       Action:
         - events:putRule
@@ -70,10 +70,10 @@ functions:
   add:
     handler: add.main
     environment:
-      EMAIL_CONFIRM_LAMBDA: virtualwatercooler-${self:custom.stage}-emailConfirmUsers
+      EMAIL_CONFIRM_LAMBDA: virtualwatercooler-${self:custom.stage}-emailConfirmMembers
     events:
       - http:
-          path: users
+          path: members
           method: post
           request:
             schema:
@@ -84,7 +84,7 @@ functions:
     handler: list.main
     events:
       - http:
-          path: users
+          path: members
           method: get
           cors: true
           authorizer: aws_iam
@@ -109,8 +109,8 @@ functions:
           method: post
           cors: true
           authorizer: aws_iam
-  emailConfirmUsers:
-    handler: emailConfirmUsers.main
+  emailConfirmMembers:
+    handler: emailConfirmMembers.main
     environment:
       PROD_URL: ${self:custom.prodUrl}
       DEV_URL: ${self:custom.devUrl}
