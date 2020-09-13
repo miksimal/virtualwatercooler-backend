@@ -17,10 +17,6 @@ export const main = handler(async (event, context) => {
     TableName: process.env.MAIN_TABLE,
   };
 
-  try {
-    const data = await dynamoDb.query(params).promise();
-    return data.Items;
-  } catch (err) {
-    throw err;
-  }
+  const data = await dynamoDb.query(params).promise();
+  return data.Items;
 });

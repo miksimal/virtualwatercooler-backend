@@ -13,15 +13,19 @@ export const main = handler(async (event, context) => {
   const orgId = callerInfo.orgId;
 
   const frequency = JSON.parse(event.body);
-  const ruleName = orgId + "-" + process.env.STAGE;
+  const ruleName = orgId + "-watercooler-" + process.env.STAGE;
 
+  const PK = "ORG#" + orgId;
   const params = {
+    ExpressionAttributeNames: { "#frequency": "frequency"},
+    ExpressionAttributeValues: { ":frequency": frequency},
     TableName: process.env.MAIN_TABLE,
-    Item: {
-      organisationId: orgId,
-      userId: "RecurrenceRule",
-      frequency: frequency
-    }
+    Key: {
+      PK: PK,
+      SK: PK
+    },
+    ConditionExpression: "attribute_exists(PK)",
+    UpdateExpression: "set #frequency = :frequency"
   };
 
   let scheduleExpression;
@@ -61,7 +65,7 @@ export const main = handler(async (event, context) => {
       try {
         await cloudWatch.removeTargets({Ids: [orgId], Rule: ruleName}).promise();
         await cloudWatch.deleteRule({Name: ruleName}).promise();
-        await dynamoDb.put(params).promise();
+        await dynamoDb.update(params).promise();
         return (orgId + "'s recurrence rule is now set to 'Never'");
       } catch(err) {
         throw err;
@@ -70,28 +74,24 @@ export const main = handler(async (event, context) => {
       throw new Error('Invalid frequency');
   }
 
-  try {
-    await cloudWatch.putRule({
-      Name: ruleName,
-      ScheduleExpression: scheduleExpression
-    }).promise();
+  await cloudWatch.putRule({
+    Name: ruleName,
+    ScheduleExpression: scheduleExpression
+  }).promise();
 
-    await cloudWatch.putTargets({
-      Rule: ruleName,
-      Targets: [
-        {
-          Id: orgId,
-          Arn: recurringPairAndEmailFunctionArn,
-          Input: JSON.stringify({
-            organisationId: orgId
-          })
-        }
-      ]
-    }).promise();
+  await cloudWatch.putTargets({
+    Rule: ruleName,
+    Targets: [
+      {
+        Id: orgId,
+        Arn: recurringPairAndEmailFunctionArn,
+        Input: JSON.stringify({
+          organisationId: orgId
+        })
+      }
+    ]
+  }).promise();
 
-    await dynamoDb.put(params).promise();
-    return (orgId + "'s recurrence rule " + scheduleExpression + " was added");
-  } catch(err) {
-      throw err;
-  }
+  await dynamoDb.update(params).promise();
+  return (orgId + "'s recurrence rule " + scheduleExpression + " was added");
 });

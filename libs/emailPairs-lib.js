@@ -8,8 +8,8 @@ export default function emailPairs(pairs, ses, unsubscribeLink, organisationName
   for (let pair of pairs) {
     let recipientA = pair[0].email;
     let recipientB = pair[1].email;
-    let nameA = pair[0].firstName;
-    let nameB = pair[1].firstName;
+    let nameA = pair[0].name;
+    let nameB = pair[1].name;
 
     // The subject line for the email.
     const subject = `Water cooler: ${nameA} <> ${nameB} 👋☕️`;

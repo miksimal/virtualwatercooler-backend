@@ -4,33 +4,37 @@ import emailPairs from "./libs/emailPairs-lib";
 import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const ses = new AWS.SES();
+const tableName = process.env.MAIN_TABLE;
 
 export const main = handler(async (event, context) => {
   const orgId = event.organisationId;
-  const confirmed = "Confirmed";
-
-  const queryParams = {
-    ExpressionAttributeNames: { "#organisationId": "organisationId", "#status": "status" },
-    ExpressionAttributeValues: { ':orgId': orgId, ':confirmed': confirmed },
-    KeyConditionExpression: '#organisationId = :orgId',
-    FilterExpression: '#status = :confirmed',
-    TableName: process.env.MAIN_TABLE,
-  };
-  let data;
-  try {
-    data = await dynamoDb.query(queryParams).promise();
-  } catch(e) {
-    throw e;
-  }
-
-  let pairs = pair(data);
-
-  const organisationName = pairs[0][0].organisationName;
-  const ses = new AWS.SES();
   const unsubscribeLink = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + "/unsubscribe";
 
-  let promisesArray = emailPairs(pairs, ses, unsubscribeLink, organisationName);
+  const PK = "ORG#" + orgId;
+  const params = {
+    ExpressionAttributeNames: { "#PK": "PK", "#status": "status", "#type": "type" },
+    ExpressionAttributeValues: { ':PK': PK, ':active': "Active", ':organisation': "Organisation" },
+    KeyConditionExpression: '#PK = :PK',
+    FilterExpression: '#status = :active OR #type = :organisation',
+    TableName: tableName,
+  };
 
-  await Promise.all(promisesArray);
+  const activeMembersAndOrg = await dynamoDb.query(params).promise();
+  const activeMembers = [];
+  let orgName;
+
+  for (let e of activeMembersAndOrg.Items) {
+    if (e.type === 'Organisation') {
+      orgName = e.name;
+    } else {
+      activeMembers.push(e);
+    }
+  }
+
+  const pairs = pair(activeMembers);
+  const promisesArray = emailPairs(pairs, ses, unsubscribeLink, orgName);
+
+  await Promise.all(promisesArray); // TODO should i use promise.allsettled and try to resend any failed?
   return pairs;
 });

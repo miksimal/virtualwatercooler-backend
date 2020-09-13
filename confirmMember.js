@@ -33,11 +33,6 @@ export const main = handler(async (event, context) => {
 
   const params = {TransactItems: [{Delete: tokenParams}, {Update: memberParams}]};
 
-  try {
-    await dynamoDb.transactWrite(params).promise();
-
-    return (data.email + "'s status was updated to 'Active'");
-  } catch(err) {
-    throw err;
-  }
+  await dynamoDb.transactWrite(params).promise();
+  return (data.email + "'s status was updated to 'Active'");
 });

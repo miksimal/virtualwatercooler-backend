@@ -9,15 +9,12 @@ export default async function getCallerInfo(event, cognitoidentityserviceprovide
     UserPoolId: userPoolId,
     Username: userPoolUserId
   };
-  try {
-    const data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
-    const callerInfo = {
-      adminName: data.UserAttributes.find(attr => attr.Name == 'name').Value,
-      orgId: data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value,
-      orgName: data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value // TODO would be better to get orgname from dynamo
-    };
-    return callerInfo;
-  } catch(err) {
-    throw err;
-  }
+
+  const data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
+  const callerInfo = {
+    adminName: data.UserAttributes.find(attr => attr.Name == 'name').Value,
+    orgId: data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value,
+    orgName: data.UserAttributes.find(attr => attr.Name == 'custom:organisationName').Value // TODO would be better to get orgname from dynamo
+  };
+  return callerInfo;
 }
