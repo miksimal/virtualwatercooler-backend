@@ -114,8 +114,8 @@ functions:
     environment:
       PROD_URL: ${self:custom.prodUrl}
       DEV_URL: ${self:custom.devUrl}
-  confirm:
-    handler: confirmUser.main
+  confirmMember:
+    handler: confirmMember.main
     events:
       - http:
           path: confirm

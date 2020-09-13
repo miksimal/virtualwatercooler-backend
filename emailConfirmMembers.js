@@ -2,7 +2,7 @@ import AWS from "aws-sdk";
 import handler from "./libs/handler-lib";
 
 const ses = new AWS.SES();
-const baseURL = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + '/confirmation/'; // add the memberID at the end for their unique endpoint
+const baseURL = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + '/confirmation/';
 
 const sendEmail = async (ses, member, adminInfo) => {
   const sender = "watercooler@virtualwatercooler.xyz";
@@ -13,7 +13,7 @@ const sendEmail = async (ses, member, adminInfo) => {
 
   const recipient = member.email;
   const name = member.name;
-  const employeeLink = baseURL + orgId + '/' + member.SK + '/' + member.token;
+  const employeeLink = baseURL + orgId + '/' + member.email + '/' + member.tokenId;
 
   const subject = `Confirmation required: ${adminName} added you to Virtual Watercooler for ${orgName}`;
 

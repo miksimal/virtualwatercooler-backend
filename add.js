@@ -62,7 +62,8 @@ export const main = handler(async (event, context) => {
         type: "Member"
       }
     };
-    const token = "CONFIRMTOKEN#" + uuid.v1();
+    const tokenId = uuid.v1();
+    const token = "CONFIRMTOKEN#" + tokenId;
     const tokenParams = {
       TableName: tableName,
       Item: {
@@ -74,7 +75,7 @@ export const main = handler(async (event, context) => {
     const params = {TransactItems: [{Put: memberParams}, {Put: tokenParams}]};
 
     promisesArray.push(dynamoDb.transactWrite(params).promise());
-    memberDetailsForEmails.push({SK: memberParams.Item.SK, email: memberParams.Item.email, name: memberParams.Item.name, token: token});
+    memberDetailsForEmails.push({email: memberParams.Item.email, name: memberParams.Item.name, tokenId: tokenId});
   }
 
   const results = await Promise.allSettled(promisesArray);
@@ -97,11 +98,11 @@ export const main = handler(async (event, context) => {
   const emailParams = {
     FunctionName: emailLambdaName,
     InvocationType: "Event",
-    Payload: JSON.stringify({memberArray: memberDetailsForEmails, adminInfo: {orgName: orgName, orgId: orgId, adminName: adminName}})
+    Payload: JSON.stringify({memberArray: memberDetailsForEmails, adminInfo: {orgId: orgId, orgName: orgName, adminName: adminName}})
   };
 
   try {
-    emailLambda.invoke(emailParams).promise();
+    await emailLambda.invoke(emailParams).promise();
   } catch (err) {
     throw err;
   }
