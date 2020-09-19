@@ -9,7 +9,7 @@ const tableName = process.env.MAIN_TABLE;
 
 export const main = handler(async (event, context) => {
   const orgId = event.organisationId;
-  const unsubscribeLink = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + "/unsubscribe";
+  const unsubscribeLink = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + "/unsubscribe/" + orgId;
 
   const PK = "ORG#" + orgId;
   const params = {
@@ -32,6 +32,7 @@ export const main = handler(async (event, context) => {
     }
   }
 
+  if (activeMembers.length < 2) throw new Error('Recurring email for ' + orgName + ' not sent - fewer than 2 active members');
   const pairs = pair(activeMembers);
   const promisesArray = emailPairs(pairs, ses, unsubscribeLink, orgName);
 

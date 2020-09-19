@@ -1,48 +1,39 @@
+import handler from "./libs/handler-lib";
 import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
-const headers = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Credentials": true
-};
+const tableName = process.env.MAIN_TABLE;
 
-export async function main(event, context, callback) {
+export const main = handler(async (event, context) => {
   const data = JSON.parse(event.body);
-  const userId = data.userId;
-  const orgId = data.orgId;
 
-  // DynamoDB UpdateItem status of the user with this userId/orgId to Unsubscribed
-  const params = {
-    TableName: process.env.MAIN_TABLE,
-    UpdateExpression: "set #status = :unsubscribed",
-    ExpressionAttributeNames: {
-      "#status": "status"
-    },
-    ExpressionAttributeValues: {
-      ":unsubscribed": "Unsubscribed"
-    },
+  const token = "GOODBYETOKEN#" + data.tokenId;
+  const SK = "MEMBER#" + data.email;
+  const PK = "ORG#" + data.orgId;
+
+  const tokenParams = {
+    TableName: tableName,
     Key: {
-      "organisationId": orgId,
-      "userId": userId,
-    }
+      PK: token,
+      SK: SK
+    },
+    ConditionExpression: "attribute_exists(PK)",
   };
 
-  try {
-    await dynamoDb.update(params).promise();
+  const memberParams = {
+    ExpressionAttributeNames: { "#status": "status"},
+    ExpressionAttributeValues: { ":unsubscribed": "Unsubscribed"},
+    TableName: tableName,
+    Key: {
+      PK: PK,
+      SK: SK
+    },
+    ConditionExpression: "attribute_exists(PK)",
+    UpdateExpression: "set #status = :unsubscribed"
+  };
 
-    const response = {
-      statusCode: 200,
-      headers: headers,
-      body: JSON.stringify(userId + "'s status was updated to 'Unsubscribed'")
-    };
-    callback(null, response);
-  } catch(err) {
-      console.log(err);
-      const response = {
-        statusCode: 500,
-        headers: headers,
-        body: JSON.stringify({ status: false })
-      };
-      callback(null, response);
-  }
-}
+  const params = {TransactItems: [{Delete: tokenParams}, {Update: memberParams}]};
+
+  await dynamoDb.transactWrite(params).promise();
+  return (data.email + "'s status was updated to 'Unsubscribed'");
+});

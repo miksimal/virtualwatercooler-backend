@@ -35,9 +35,10 @@ const validateMembersAndRetrieveOrgName = async (orgId, pairs, tableName) => {
 
 export const main = handler(async (event, context) => {
   const data = JSON.parse(event.body);
-  const unsubscribeLink = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + '/unsubscribe';
+  const orgId = data.orgId;
+  const unsubscribeLink = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + '/unsubscribe/' + orgId;
 
-  const orgName = await validateMembersAndRetrieveOrgName(data.orgId, data.pairs, process.env.MAIN_TABLE);
+  const orgName = await validateMembersAndRetrieveOrgName(orgId, data.pairs, process.env.MAIN_TABLE);
 
   const promisesArray = emailPairs(data.pairs, ses, unsubscribeLink, orgName);
 

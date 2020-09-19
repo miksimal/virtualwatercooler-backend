@@ -121,7 +121,6 @@ functions:
           path: confirm
           method: post
           cors: true
-          authorizer: aws_iam
   requestUnsubscribe:
     handler: requestUnsubscribe.main
     environment:
@@ -132,7 +131,6 @@ functions:
           path: unsubscribe/request
           method: post
           cors: true
-          authorizer: aws_iam
   confirmUnsubscribe:
     handler: confirmUnsubscribe.main
     events:
@@ -140,7 +138,6 @@ functions:
           path: unsubscribe/confirm
           method: post
           cors: true
-          authorizer: aws_iam
   recurringPairAndEmail:
     handler: recurringPairAndEmail.main
     environment:

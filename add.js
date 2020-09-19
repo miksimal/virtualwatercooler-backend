@@ -38,7 +38,6 @@ const checkForDuplicates = async (orgId, tableName, addMemberDataArray) => {
 
 export const main = handler(async (event, context) => {
   const addMemberDataArray = JSON.parse(event.body);
-  // TODO do I need to validate that the request data doesnt contain duplicates or does json-schema do that?
   const callerInfo = await getCallerInfo(event, cognitoidentityserviceprovider);
   const orgId = callerInfo.orgId;
   const adminName = callerInfo.adminName;

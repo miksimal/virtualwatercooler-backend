@@ -1,7 +1,7 @@
 Resources:
   MainTable:
     Type: AWS::DynamoDB::Table
-    Properties:
+    Properties: # TODO set TimeToLiveSpecification (so we can auto delete requestunsub tokens after 48 hrs, say)
       TableName: ${self:custom.mainTableName}
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
