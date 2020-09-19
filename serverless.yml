@@ -1,4 +1,4 @@
-service: coffee-is-work-backend
+service: virtualwatercooler
 
 # Create an optimized package for our functions 
 package:
@@ -14,7 +14,7 @@ custom:
   # commands. Or fallsback to what we have set in the provider section.
   stage: ${opt:stage, self:provider.stage}
   # Set the table name here so we can use it while testing locally
-  usersTableName: ${self:custom.stage}-UsersTable
+  mainTableName: ${self:custom.stage}-MainTable-virtualwatercooler
   prodUrl: https://virtualwatercooler.xyz
   devUrl: http://localhost:3000
 
@@ -24,7 +24,7 @@ provider:
   stage: dev
   region: eu-west-1
   environment:
-    USERS_TABLE: ${self:custom.usersTableName}
+    MAIN_TABLE: ${self:custom.mainTableName}
     STAGE: ${opt:stage, self:provider.stage}
     POST_CONFIRMATION_LAMBDA: arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:custom.stage}-postConfirmation
   # To load environment variables externally
@@ -43,7 +43,7 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource:
-        - "Fn::GetAtt": [ UsersTable, Arn]
+        - "Fn::GetAtt": [ MainTable, Arn]
     - Effect: "Allow"
       Action:
         - ses:SendEmail
@@ -53,7 +53,7 @@ provider:
       Action:
         - lambda:InvokeFunction
       Resource:
-        - arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:custom.stage}-emailConfirmUsers
+        - arn:aws:lambda:${self:provider.region}:866195672519:function:${self:service}-${self:custom.stage}-emailConfirmMembers
     - Effect: "Allow"
       Action:
         - events:putRule
@@ -70,10 +70,10 @@ functions:
   add:
     handler: add.main
     environment:
-      EMAIL_CONFIRM_LAMBDA: coffee-is-work-backend-${self:custom.stage}-emailConfirmUsers
+      EMAIL_CONFIRM_LAMBDA: virtualwatercooler-${self:custom.stage}-emailConfirmMembers
     events:
       - http:
-          path: users
+          path: members
           method: post
           request:
             schema:
@@ -84,7 +84,7 @@ functions:
     handler: list.main
     events:
       - http:
-          path: users
+          path: members
           method: get
           cors: true
           authorizer: aws_iam
@@ -109,19 +109,18 @@ functions:
           method: post
           cors: true
           authorizer: aws_iam
-  emailConfirmUsers:
-    handler: emailConfirmUsers.main
+  emailConfirmMembers:
+    handler: emailConfirmMembers.main
     environment:
       PROD_URL: ${self:custom.prodUrl}
       DEV_URL: ${self:custom.devUrl}
-  confirm:
-    handler: confirmUser.main
+  confirmMember:
+    handler: confirmMember.main
     events:
       - http:
           path: confirm
           method: post
           cors: true
-          authorizer: aws_iam
   requestUnsubscribe:
     handler: requestUnsubscribe.main
     environment:
@@ -132,7 +131,6 @@ functions:
           path: unsubscribe/request
           method: post
           cors: true
-          authorizer: aws_iam
   confirmUnsubscribe:
     handler: confirmUnsubscribe.main
     events:
@@ -140,7 +138,6 @@ functions:
           path: unsubscribe/confirm
           method: post
           cors: true
-          authorizer: aws_iam
   recurringPairAndEmail:
     handler: recurringPairAndEmail.main
     environment:
@@ -165,6 +162,7 @@ resources:
   - Resources:
       PostConfirmationTriggerInvokePermission:
         Type: AWS::Lambda::Permission
+        DependsOn: PostConfirmationLambdaFunction
         Properties:
           Action: lambda:InvokeFunction
           Principal: cognito-idp.amazonaws.com

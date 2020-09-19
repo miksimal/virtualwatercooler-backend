@@ -1,6 +1,5 @@
 export default function emailPairs(pairs, ses, unsubscribeLink, organisationName) {
-  // this approach is a bit shaky.. It will fail if one email fails to send, so risk that user emails everyone twice. Having a lambda get triggered with a single email at a time from an SQS queue probably better (LATER).
-  // And/or adjust so it fits with my 20 emails per second SES limit (i.e. fire off 20, wait 1 sec, repeat. And/or get SES limit increased to, say, 60 per sec. Then restrict organisation sizes to max 100 people?)
+  // TODO: use an SQS queue for emailing and/or increase my SES email (currently 20 emails per second maximum)
   const sender = "watercooler@virtualwatercooler.xyz";
   const charset = "UTF-8";
   let promisesArray = [];
@@ -8,8 +7,8 @@ export default function emailPairs(pairs, ses, unsubscribeLink, organisationName
   for (let pair of pairs) {
     let recipientA = pair[0].email;
     let recipientB = pair[1].email;
-    let nameA = pair[0].firstName;
-    let nameB = pair[1].firstName;
+    let nameA = pair[0].name;
+    let nameB = pair[1].name;
 
     // The subject line for the email.
     const subject = `Water cooler: ${nameA} <> ${nameB} 👋☕️`;

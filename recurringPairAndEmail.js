@@ -4,33 +4,38 @@ import emailPairs from "./libs/emailPairs-lib";
 import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const ses = new AWS.SES();
+const tableName = process.env.MAIN_TABLE;
 
 export const main = handler(async (event, context) => {
   const orgId = event.organisationId;
-  const confirmed = "Confirmed";
+  const unsubscribeLink = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + "/unsubscribe/" + orgId;
 
-  const queryParams = {
-    ExpressionAttributeNames: { "#organisationId": "organisationId", "#status": "status" },
-    ExpressionAttributeValues: { ':orgId': orgId, ':confirmed': confirmed },
-    KeyConditionExpression: '#organisationId = :orgId',
-    FilterExpression: '#status = :confirmed',
-    TableName: process.env.USERS_TABLE,
+  const PK = "ORG#" + orgId;
+  const params = {
+    ExpressionAttributeNames: { "#PK": "PK", "#status": "status", "#type": "type" },
+    ExpressionAttributeValues: { ':PK': PK, ':active': "Active", ':organisation': "Organisation" },
+    KeyConditionExpression: '#PK = :PK',
+    FilterExpression: '#status = :active OR #type = :organisation',
+    TableName: tableName,
   };
-  let data;
-  try {
-    data = await dynamoDb.query(queryParams).promise();
-  } catch(e) {
-    throw e;
+
+  const activeMembersAndOrg = await dynamoDb.query(params).promise();
+  const activeMembers = [];
+  let orgName;
+
+  for (let e of activeMembersAndOrg.Items) {
+    if (e.type === 'Organisation') {
+      orgName = e.name;
+    } else {
+      activeMembers.push(e);
+    }
   }
 
-  let pairs = pair(data);
+  if (activeMembers.length < 2) throw new Error('Recurring email for ' + orgName + ' not sent - fewer than 2 active members');
+  const pairs = pair(activeMembers);
+  const promisesArray = emailPairs(pairs, ses, unsubscribeLink, orgName);
 
-  const organisationName = pairs[0][0].organisationName;
-  const ses = new AWS.SES();
-  const unsubscribeLink = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + "/unsubscribe";
-
-  let promisesArray = emailPairs(pairs, ses, unsubscribeLink, organisationName);
-
-  await Promise.all(promisesArray);
+  await Promise.all(promisesArray); // TODO should i use promise.allsettled and try to resend any failed?
   return pairs;
 });

@@ -1,4 +1,5 @@
 import handler from "./libs/handler-lib";
+import getCallerInfo from "./libs/getCallerInfo-lib";
 import AWS from "aws-sdk";
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
@@ -7,37 +8,24 @@ const cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 const recurringPairAndEmailFunctionArn = process.env.RECURRING_PAIRANDEMAIL_LAMBDA_ARN;
 
 export const main = handler(async (event, context) => {
-  let orgId;
 
-  const authProvider = event.requestContext.identity.cognitoAuthenticationProvider;
-  const parts = authProvider.split(':');
-  const userPoolIdParts = parts[parts.length - 3].split('/');
-  const userPoolUserId = parts[parts.length-1];
-  const userPoolId = userPoolIdParts[userPoolIdParts.length - 1];
-  const getUserParams = {
-    UserPoolId: userPoolId,
-    Username: userPoolUserId
-  };
-  try {
-    let data = await cognitoidentityserviceprovider.adminGetUser(getUserParams).promise();
-    orgId = data.UserAttributes.find(attr => attr.Name == 'custom:organisationId').Value;
-  } catch(err) {
-    throw err;
-  }
+  const callerInfo = await getCallerInfo(event, cognitoidentityserviceprovider);
+  const orgId = callerInfo.orgId;
 
   const frequency = JSON.parse(event.body);
-  const ruleName = orgId + "-" + process.env.STAGE;
+  const ruleName = orgId + "-watercooler-" + process.env.STAGE;
 
-  const dynamoPutFrequency = async () => {
-    const params = {
-      TableName: process.env.USERS_TABLE,
-      Item: {
-        organisationId: orgId,
-        userId: "RecurrenceRule",
-        frequency: frequency
-      }
-    };
-    dynamoDb.put(params).promise();
+  const PK = "ORG#" + orgId;
+  const params = {
+    ExpressionAttributeNames: { "#frequency": "frequency"},
+    ExpressionAttributeValues: { ":frequency": frequency},
+    TableName: process.env.MAIN_TABLE,
+    Key: {
+      PK: PK,
+      SK: PK
+    },
+    ConditionExpression: "attribute_exists(PK)",
+    UpdateExpression: "set #frequency = :frequency"
   };
 
   let scheduleExpression;
@@ -77,7 +65,7 @@ export const main = handler(async (event, context) => {
       try {
         await cloudWatch.removeTargets({Ids: [orgId], Rule: ruleName}).promise();
         await cloudWatch.deleteRule({Name: ruleName}).promise();
-        await dynamoPutFrequency();
+        await dynamoDb.update(params).promise();
         return (orgId + "'s recurrence rule is now set to 'Never'");
       } catch(err) {
         throw err;
@@ -86,28 +74,24 @@ export const main = handler(async (event, context) => {
       throw new Error('Invalid frequency');
   }
 
-  try {
-    await cloudWatch.putRule({
-      Name: ruleName,
-      ScheduleExpression: scheduleExpression
-    }).promise();
+  await cloudWatch.putRule({
+    Name: ruleName,
+    ScheduleExpression: scheduleExpression
+  }).promise();
 
-    await cloudWatch.putTargets({
-      Rule: ruleName,
-      Targets: [
-        {
-          Id: orgId,
-          Arn: recurringPairAndEmailFunctionArn,
-          Input: JSON.stringify({
-            organisationId: orgId
-          })
-        }
-      ]
-    }).promise();
+  await cloudWatch.putTargets({
+    Rule: ruleName,
+    Targets: [
+      {
+        Id: orgId,
+        Arn: recurringPairAndEmailFunctionArn,
+        Input: JSON.stringify({
+          organisationId: orgId
+        })
+      }
+    ]
+  }).promise();
 
-    await dynamoPutFrequency();
-    return (orgId + "'s recurrence rule " + scheduleExpression + " was added");
-  } catch(err) {
-      throw err;
-  }
+  await dynamoDb.update(params).promise();
+  return (orgId + "'s recurrence rule " + scheduleExpression + " was added");
 });

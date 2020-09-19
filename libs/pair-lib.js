@@ -1,5 +1,5 @@
-export default function pair(data) {
-  let shuffledArray = data.Items.map(e => ({email: e.email, firstName: e.firstName, organisationName: e.organisationName}));
+export default function pair(activeMembers) {
+  let shuffledArray = activeMembers.map(e => ({email: e.email, name: e.name}));
 
   for(let i = shuffledArray.length-1; i > 0; i--){
     const j = Math.floor(Math.random() * i);
