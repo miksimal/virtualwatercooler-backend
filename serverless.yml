@@ -23,6 +23,9 @@ provider:
   runtime: nodejs12.x
   stage: dev
   region: eu-west-1
+  tracing:
+    lambda: true
+    apiGateway: true
   environment:
     MAIN_TABLE: ${self:custom.mainTableName}
     STAGE: ${opt:stage, self:provider.stage}
