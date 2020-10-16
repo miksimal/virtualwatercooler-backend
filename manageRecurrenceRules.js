@@ -45,9 +45,15 @@ export const main = handler(async (event, context) => {
     case 'Fridays':
       scheduleExpression = "cron(0 12 ? * FRI *)";
       break;
-    case 'Every 5 Minutes':
-      scheduleExpression = "cron(0/5 * * * ? *)";
+    case 'Saturdays':
+      scheduleExpression = "cron(0 12 ? * SAT *)";
       break;
+    case 'Sundays':
+      scheduleExpression = "cron(0 12 ? * SUN *)";
+      break;
+    // case 'Every 5 Minutes':
+    //   scheduleExpression = "cron(0/5 * * * ? *)";
+    //   break; uncomment when needed for testing
     case 'Daily':
       scheduleExpression = "cron(0 12 * * ? *)";
       break;

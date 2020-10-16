@@ -1,46 +1,35 @@
 import AWS from "aws-sdk";
 import handler from "./libs/handler-lib";
-import emailPairs from "./libs/emailPairs-lib";
+import wait from "./libs/wait-lib";
+import emailPair from "./libs/emailPair-lib";
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const ses = new AWS.SES();
+const MAX_SENDABLE_PER_SECOND = 19;
 
-const validateMembersAndRetrieveOrgName = async (orgId, pairs, tableName) => {
-  const PK = "ORG#" + orgId;
-  const params = {
-    ExpressionAttributeNames: { "#PK": "PK", "#status": "status", "#type": "type" },
-    ExpressionAttributeValues: { ':PK': PK, ':active': "Active", ':organisation': "Organisation" },
-    KeyConditionExpression: '#PK = :PK',
-    FilterExpression: '#status = :active OR #type = :organisation',
-    TableName: tableName,
-  };
-
-  let activeMembersAndOrg = await dynamoDb.query(params).promise();
-  let orgName;
-  const activeMemberEmails = [];
-  for (let e of activeMembersAndOrg.Items) {
-    if (e.type === 'Organisation') {
-      orgName = e.name;
-    } else {
-      activeMemberEmails.push(e.email);
-    }
-  }
-  for (let pair of pairs) {
-    if (!activeMemberEmails.includes(pair[0].email) || !activeMemberEmails.includes(pair[1].email)) {
-      throw new Error("One or more members are no longer Active. Please re-generate pairs and try again.");
-    }
-  }
-  return orgName;
-};
-
+// TODO dont really need to wrap this in handler?
 export const main = handler(async (event, context) => {
-  const data = JSON.parse(event.body);
-  const orgId = data.orgId;
-  const unsubscribeLink = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + '/unsubscribe/' + orgId;
+  const message = JSON.parse(event.Records[0].body);
+  const pairs = message.pairs;
 
-  const orgName = await validateMembersAndRetrieveOrgName(orgId, data.pairs, process.env.MAIN_TABLE);
+  const promisesArray = [];
+  let sentWithoutPauseCount = 0;
+  for (const pair of pairs) {
+    if (sentWithoutPauseCount === MAX_SENDABLE_PER_SECOND) {
+      sentWithoutPauseCount = 0;
+      await wait(1050);
+    }
+    promisesArray.push(emailPair(ses, pair, message.orgId, message.orgName));
+    sentWithoutPauseCount++;
+  }
 
-  const promisesArray = emailPairs(data.pairs, ses, unsubscribeLink, orgName);
+  const results = await Promise.allSettled(promisesArray);
 
-  await Promise.all(promisesArray);
+  const failedSends = [];
+  for (let i = 0; i < results.length; i++) {
+    if (results[i].status == "rejected") {
+      failedSends.push(JSON.stringify(pairs[i]));
+    }
+  }
+
+  if (failedSends.length !== 0) throw new Error("Unable to send pairing emails to the following pairs: " + failedSends.join(", "));
 });

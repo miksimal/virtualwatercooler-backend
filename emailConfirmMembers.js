@@ -1,8 +1,10 @@
 import AWS from "aws-sdk";
 import handler from "./libs/handler-lib";
+import wait from "./libs/wait-lib";
 
 const ses = new AWS.SES();
 const baseURL = (process.env.STAGE == 'prod' ? process.env.PROD_URL : process.env.DEV_URL) + '/confirmation/';
+const MAX_SENDABLE_PER_SECOND = 19;
 
 const sendEmail = async (ses, member, adminInfo) => {
   const sender = "watercooler@virtualwatercooler.xyz";
@@ -62,12 +64,20 @@ const sendEmail = async (ses, member, adminInfo) => {
   return ses.sendEmail(params).promise();
 };
 
+//TODO dont really need to wrap this in handler?
 export const main = handler(async (event, context) => {
-  const memberArray = event.memberArray;
+  const message = JSON.parse(event.Records[0].body);
+  const memberArray = message.memberArray;
 
   const promisesArray = [];
-  for (let member of memberArray) {
-    promisesArray.push(sendEmail(ses, member, event.adminInfo));
+  let sentWithoutPauseCount = 0;
+  for (const member of memberArray) {
+    if (sentWithoutPauseCount === MAX_SENDABLE_PER_SECOND) {
+      sentWithoutPauseCount = 0;
+      await wait(1050);
+    }
+    promisesArray.push(sendEmail(ses, member, message.adminInfo));
+    sentWithoutPauseCount++;
   }
 
   const results = await Promise.allSettled(promisesArray);
@@ -80,5 +90,4 @@ export const main = handler(async (event, context) => {
   }
 
   if (failedSends.length !== 0) throw new Error("Unable to send confirmation emails to the following members: " + failedSends.join(", "));
-  else return (promisesArray.length + " confirmation emails were sent");
 });
