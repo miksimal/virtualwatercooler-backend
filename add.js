@@ -6,7 +6,8 @@ import AWS from "aws-sdk";
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 const tableName = process.env.MAIN_TABLE;
-const emailLambdaName = process.env.EMAIL_CONFIRM_LAMBDA;
+const queueUrl = process.env.QUEUE_URL;
+const sqs = new AWS.SQS();
 
 const checkForDuplicates = async (orgId, tableName, addMemberDataArray) => {
   let existingEmails;
@@ -91,18 +92,15 @@ export const main = handler(async (event, context) => {
     throw new Error("Failed to add any of the members because: " + failedAdds[0].reason);
   }
 
-  const emailLambda = new AWS.Lambda({
-    region: "eu-west-1"
-  });
-  const emailParams = {
-    FunctionName: emailLambdaName,
-    InvocationType: "Event",
-    Payload: JSON.stringify({memberArray: memberDetailsForEmails, adminInfo: {orgId: orgId, orgName: orgName, adminName: adminName}})
+  const sqsParams = {
+    MessageBody: JSON.stringify({memberArray: memberDetailsForEmails, adminInfo: {orgId: orgId, orgName: orgName, adminName: adminName}}),
+    QueueUrl: queueUrl
   };
 
   try {
-    await emailLambda.invoke(emailParams).promise();
+    await sqs.sendMessage(sqsParams).promise();
   } catch (err) {
+    // TODO would make sense to REMOVE the new members from DDB here since if we fail to add to queue they won't get a confirmation email
     throw err;
   }
 
