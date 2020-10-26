@@ -211,8 +211,10 @@ resources:
         Properties:
           QueueName: ${self:custom.stage}-${self:service}-EmailConfirmMembersQueue
           VisibilityTimeout: 60
+          ReceiveMessageWaitTimeSeconds: 20
       EmailPairsQueue:
         Type: "AWS::SQS::Queue"
         Properties:
           QueueName: ${self:custom.stage}-${self:service}-EmailPairsQueue
           VisibilityTimeout: 60
+          ReceiveMessageWaitTimeSeconds: 20
